@@ -3,6 +3,7 @@
 #include <msctf.h>
 #include <wrl/client.h>
 #include <iostream>
+#include <tlhelp32.h>
 using Microsoft::WRL::ComPtr;
 int wmain(int argc,wchar_t** argv){
     HRESULT hr=CoInitializeEx(nullptr,COINIT_APARTMENTTHREADED);if(FAILED(hr))return 1;
@@ -10,7 +11,51 @@ int wmain(int argc,wchar_t** argv){
     hr=CoCreateInstance(CLSID_TF_InputProcessorProfiles,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&profiles));
     if(FAILED(hr))return 2;
     std::wstring op=argc>1?argv[1]:L"--profiles";
-    if(op==L"--enable")hr=profiles->EnableLanguageProfile(tipClsid,inputLanguage,profileGuid,TRUE);
+    if(op==L"--ipc-smoke"){
+        auto exe=sailking::executableDirectory()/L"SailKingBroker.exe";
+        std::wstring command=L"\""+exe.wstring()+L"\" --ipc-test";
+        STARTUPINFOW startup{sizeof(startup)};PROCESS_INFORMATION child{};
+        if(!CreateProcessW(exe.c_str(),command.data(),nullptr,nullptr,FALSE,CREATE_NO_WINDOW,nullptr,nullptr,&startup,&child))return 10;
+        sailking::Request request;GUID id;CoCreateGuid(&id);memcpy(request.session.data(),&id,16);sailking::Response reply;
+        bool ready=false;for(int i=0;i<100&&!ready;++i){Sleep(100);ready=sailking::exchange(request,reply,500);}
+        int result=ready?0:11;
+        auto call=[&](sailking::Operation operation,uint32_t key=0){request.operation=operation;request.key=key;return sailking::exchange(request,reply,1000);};
+        if(!result){
+            for(int iteration=0;iteration<20&&!result;++iteration){
+                if(!call(sailking::Operation::reset))result=12;
+                for(char c:std::string("nihao"))if(!call(sailking::Operation::key,c)||!reply.handled)result=13;
+                if(!reply.count||std::u16string(reply.candidates[0])!=u"你好")result=14;
+                if(!call(sailking::Operation::key,' ')||std::u16string(reply.commit)!=u"你好"||reply.preedit[0])result=15;
+            }
+            if(!call(sailking::Operation::toggleTranslation)||!reply.translation)result=16;
+            for(char c:std::string("nihao"))if(!call(sailking::Operation::key,c))result=17;
+            if(!call(sailking::Operation::key,' ')||reply.commit[0]||std::u16string(reply.draft)!=u"你好")result=18;
+            if(!call(sailking::Operation::key,0xff0d)||reply.commit[0])result=19;
+            for(int i=0;i<50&&reply.job==sailking::Job::running;++i){Sleep(100);if(!call(sailking::Operation::status))result=20;}
+            if(reply.job!=sailking::Job::failed||reply.result[0]||std::u16string(reply.draft)!=u"你好")result=21;
+            if(!call(sailking::Operation::commitOriginal)||std::u16string(reply.commit)!=u"你好")result=22;
+            if(!call(sailking::Operation::toggleTranslation)||reply.translation)result=23;
+            if(!call(sailking::Operation::toggleEnglish)||!reply.english)result=24;
+            if(!call(sailking::Operation::key,'A')||reply.handled||reply.commit[0])result=25;
+        }
+        call(sailking::Operation::shutdown);DWORD ended=WaitForSingleObject(child.hProcess,10000);CloseHandle(child.hThread);CloseHandle(child.hProcess);
+        if(ended!=WAIT_OBJECT_0)result=26;
+        std::cout<<"{\"ipcSmoke\":"<<(result?"false":"true")<<",\"code\":"<<result<<"}\n";return result;
+    }
+    else if(op==L"--stop-broker"){
+        HANDLE snapshot=CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);PROCESSENTRY32W entry{};entry.dwSize=sizeof(entry);
+        if(snapshot!=INVALID_HANDLE_VALUE&&Process32FirstW(snapshot,&entry))do{
+            if(_wcsicmp(entry.szExeFile,L"SailKingBroker.exe")!=0)continue;
+            HANDLE process=OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,FALSE,entry.th32ProcessID);if(!process)continue;
+            wchar_t image[32768]{};DWORD length=32768,session=0;
+            if(QueryFullProcessImageNameW(process,0,image,&length)&&std::filesystem::path(image)==sailking::executableDirectory()/L"SailKingBroker.exe"&&ProcessIdToSessionId(entry.th32ProcessID,&session)){
+                sailking::Request request;request.operation=sailking::Operation::shutdown;sailking::Response reply;
+                sailking::exchangeAt(sailking::pipeNameFor(session),request,reply,2000);
+            }CloseHandle(process);
+        }while(Process32NextW(snapshot,&entry));
+        if(snapshot!=INVALID_HANDLE_VALUE)CloseHandle(snapshot);hr=S_OK;
+    }
+    else if(op==L"--enable")hr=profiles->EnableLanguageProfile(tipClsid,inputLanguage,profileGuid,TRUE);
     else if(op==L"--self-test"){
         ComPtr<ITfTextInputProcessorEx> tip;ComPtr<ITfThreadMgr> manager;TfClientId id=TF_CLIENTID_NULL;
         hr=CoCreateInstance(tipClsid,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&tip));

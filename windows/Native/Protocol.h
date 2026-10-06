@@ -6,7 +6,7 @@
 // Fixed-width UTF-16 wire format: identical for 32-bit and 64-bit TSF clients.
 namespace sailking {
 constexpr uint32_t magic = 0x534B494D, version = 1;
-enum class Operation : uint32_t { status, key, select, reset, close, toggleEnglish, toggleTranslation, translateText, cancel, commitOriginal };
+enum class Operation : uint32_t { status, key, select, reset, close, toggleEnglish, toggleTranslation, translateText, cancel, commitOriginal, shutdown };
 enum class Job : uint32_t { idle, running, ready, failed };
 #pragma pack(push, 4)
 struct Request {
@@ -35,7 +35,7 @@ template<size_t N> bool copy(char16_t (&to)[N], const std::u16string& from) {
 }
 template<size_t N> bool terminated(const char16_t (&s)[N]) { return std::find(s,s+N,u'\0')!=s+N; }
 inline bool valid(const Request& r) {
-    return r.signature==magic && r.protocol==version && r.operation<=Operation::commitOriginal &&
+    return r.signature==magic && r.protocol==version && r.operation<=Operation::shutdown &&
         terminated(r.text) && terminated(r.source) && terminated(r.target);
 }
 }

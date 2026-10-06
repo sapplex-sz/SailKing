@@ -35,9 +35,10 @@ inline std::wstring userSid() {
     LPWSTR sid=nullptr; if(!ConvertSidToStringSidW(reinterpret_cast<TOKEN_USER*>(data.data())->User.Sid,&sid)) throw std::runtime_error("Invalid SID");
     std::wstring out=sid; LocalFree(sid); return out;
 }
+inline std::wstring pipeNameFor(DWORD session) { return L"\\\\.\\pipe\\SailKing-"+userSid()+L"-"+std::to_wstring(session); }
 inline std::wstring pipeName() {
     DWORD session=0; if(!ProcessIdToSessionId(GetCurrentProcessId(),&session)) throw std::runtime_error("Session unavailable");
-    return L"\\\\.\\pipe\\SailKing-"+userSid()+L"-"+std::to_wstring(session);
+    return pipeNameFor(session);
 }
 inline std::filesystem::path userData() {
     PWSTR path=nullptr; if(FAILED(SHGetKnownFolderPath(FOLDERID_LocalAppData,0,nullptr,&path))) throw std::runtime_error("Local app data unavailable");
@@ -67,9 +68,8 @@ inline bool transfer(HANDLE pipe,void* buffer,DWORD size,bool writing,DWORD time
     }
     CloseHandle(pending.hEvent);return ok&&done==size;
 }
-inline bool exchange(const Request& request,Response& response,DWORD timeout=180) {
+inline bool exchangeAt(const std::wstring& name,const Request& request,Response& response,DWORD timeout=180) {
     try {
-        auto name=pipeName();
         HANDLE pipe=CreateFileW(name.c_str(),GENERIC_READ|GENERIC_WRITE,0,nullptr,OPEN_EXISTING,FILE_FLAG_OVERLAPPED,nullptr);
         if(pipe==INVALID_HANDLE_VALUE){
             if(GetLastError()!=ERROR_PIPE_BUSY||!WaitNamedPipeW(name.c_str(),timeout))return false;
@@ -79,11 +79,15 @@ inline bool exchange(const Request& request,Response& response,DWORD timeout=180
         DWORD mode=PIPE_READMODE_MESSAGE;SetNamedPipeHandleState(pipe,&mode,nullptr,nullptr);
         Response result;
         bool ok=transfer(pipe,const_cast<Request*>(&request),sizeof(request),true,timeout)&&transfer(pipe,&result,sizeof(result),false,timeout);
+        BYTE acknowledged=0xa5;if(ok)ok=transfer(pipe,&acknowledged,1,true,timeout);
         CloseHandle(pipe);
         if(!ok||result.signature!=magic||result.protocol!=version||result.count<0||result.count>9||
             !terminated(result.preedit)||!terminated(result.draft)||!terminated(result.commit)||!terminated(result.result)||!terminated(result.error))return false;
         for(int i=0;i<result.count;++i)if(!terminated(result.candidates[i]))return false;
         response=result; return result.available!=0;
     } catch(...) { return false; }
+}
+inline bool exchange(const Request& request,Response& response,DWORD timeout=180) {
+    try{return exchangeAt(pipeName(),request,response,timeout);}catch(...){return false;}
 }
 }

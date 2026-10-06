@@ -19,6 +19,8 @@ std::mutex stateMutex,engineMutex;
 std::map<std::array<uint8_t,16>,std::shared_ptr<struct Session>> sessions;
 haha_engine* engine=nullptr;
 bool testing=false;
+std::filesystem::path testingData;
+std::atomic<bool> stopping{false};
 struct Cancel {
     haha_cancellation* value=haha_cancellation_create();
     ~Cancel(){haha_cancellation_destroy(value);}
@@ -55,7 +57,7 @@ std::string sha256(const std::filesystem::path& path) {
     std::ostringstream out;out<<std::hex<<std::setfill('0');for(auto b:digest)out<<std::setw(2)<<int(b);return out.str();
 }
 std::filesystem::path trustedModel() {
-    auto path=userData()/L"Models"/L"Hy-MT2-1.8B-Q4_K_M.gguf";
+    auto path=(testing?testingData:userData())/L"Models"/L"Hy-MT2-1.8B-Q4_K_M.gguf";
     static std::filesystem::file_time_type verifiedTime{};
     if(!std::filesystem::exists(path)||std::filesystem::file_size(path)!=1133080448ULL)throw std::runtime_error("请在出海王设置中下载本地翻译模型。");
     auto time=std::filesystem::last_write_time(path);
@@ -137,6 +139,7 @@ Response process(const Request& r) {
     // Prevent stale sessions from accumulating when a host exits without Deactivate.
     auto now=std::chrono::steady_clock::now();
     for(auto i=sessions.begin();i!=sessions.end();)if(now-i->second->touched>std::chrono::minutes(30)&&i->second->job!=Job::running){if(i->second->rime){api->destroy_session(i->second->rime);i->second->rime=0;}i=sessions.erase(i);}else ++i;
+    if(r.operation==Operation::shutdown){for(auto& item:sessions)cancel(*item.second);stopping=true;Response out;out.available=out.handled=1;return out;}
     if(r.operation==Operation::close){auto it=sessions.find(r.session);if(it!=sessions.end()){cancel(*it->second);if(it->second->rime)api->destroy_session(it->second->rime);it->second->rime=0;sessions.erase(it);}Response out;out.available=1;return out;}
     auto s=sessionFor(r);std::u16string commit;bool handled=false;
     if(!testing&&!s->workspace&&r.operation!=Operation::translateText){
@@ -217,18 +220,19 @@ int wmain(int argc,wchar_t** argv){
     try{
         SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32|LOAD_LIBRARY_SEARCH_APPLICATION_DIR|LOAD_LIBRARY_SEARCH_USER_DIRS);
         auto root=executableDirectory();
+        if(argc>1&&std::wstring(argv[1])==L"--ipc-test"){testing=true;testingData=std::filesystem::temp_directory_path()/(L"SailKing-IPC-Test-"+std::to_wstring(GetCurrentProcessId()));}
         if(argc>1&&std::wstring(argv[1])==L"--smoke")return smoke(root);
         if(argc>1&&std::wstring(argv[1])==L"--prepare-data"){initialize(root,root/L"RimeData");api->finalize();return 0;}
         auto name=pipeName();auto mutexName=L"Local\\"+name.substr(9);
         HANDLE singleton=CreateMutexW(nullptr,TRUE,mutexName.c_str());if(!singleton)return 2;if(GetLastError()==ERROR_ALREADY_EXISTS){CloseHandle(singleton);return 0;}
-        initialize(root,userData()/L"Rime");
+        initialize(root,(testing?testingData:userData())/L"Rime");
         // Current user + SYSTEM, local logon session only. No network endpoint and no Everyone ACL.
         PSECURITY_DESCRIPTOR descriptor=nullptr;
         std::wstring acl=L"D:P(A;;GA;;;SY)(A;;GA;;;"+userSid()+L")";
         if(!ConvertStringSecurityDescriptorToSecurityDescriptorW(acl.c_str(),SDDL_REVISION_1,&descriptor,nullptr))return 3;
         SECURITY_ATTRIBUTES security{sizeof(security),descriptor,FALSE};
         DWORD currentSession=0;ProcessIdToSessionId(GetCurrentProcessId(),&currentSession);
-        while(true){
+        while(!stopping){
             HANDLE pipe=CreateNamedPipeW(name.c_str(),PIPE_ACCESS_DUPLEX|FILE_FLAG_OVERLAPPED,PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE|PIPE_WAIT|PIPE_REJECT_REMOTE_CLIENTS,1,sizeof(Response),sizeof(Request),1000,&security);
             if(pipe==INVALID_HANDLE_VALUE)return 4;
             OVERLAPPED connection{};connection.hEvent=CreateEventW(nullptr,TRUE,FALSE,nullptr);
@@ -238,13 +242,22 @@ int wmain(int argc,wchar_t** argv){
             if(connected){
                 ULONG pid=0;DWORD clientSession=0;
                 Request request;Response response;
-                if(GetNamedPipeClientProcessId(pipe,&pid)&&ProcessIdToSessionId(pid,&clientSession)&&clientSession==currentSession&&
-                    transfer(pipe,&request,sizeof(request),false,500)){
+                if(GetNamedPipeClientProcessId(pipe,&pid)&&ProcessIdToSessionId(pid,&clientSession)&&transfer(pipe,&request,sizeof(request),false,500)){
+                    bool permitted=clientSession==currentSession;
+                    if(!permitted&&request.operation==Operation::shutdown){
+                        HANDLE peer=OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,FALSE,pid);wchar_t image[32768]{};DWORD length=32768;
+                        if(peer){permitted=QueryFullProcessImageNameW(peer,0,image,&length)&&std::filesystem::path(image)==root/L"SailKingProbe.exe";CloseHandle(peer);}
+                    }
+                    if(!permitted){DisconnectNamedPipe(pipe);CloseHandle(pipe);continue;}
                     try{response=process(request);}catch(const std::exception& e){response.available=1;copy(response.error,fromUtf8(e.what()));}
-                    transfer(pipe,&response,sizeof(response),true,500);
+                    if(transfer(pipe,&response,sizeof(response),true,500)){BYTE acknowledged=0;transfer(pipe,&acknowledged,1,false,500);}
                 }
             }
             DisconnectNamedPipe(pipe);CloseHandle(pipe);
         }
+        LocalFree(descriptor);
+        {std::lock_guard<std::mutex> serial(engineMutex);haha_engine_destroy(engine);engine=nullptr;}
+        {std::lock_guard<std::mutex> lock(stateMutex);for(auto& item:sessions){if(item.second->rime)api->destroy_session(item.second->rime);item.second->rime=0;}sessions.clear();api->finalize();}
+        ReleaseMutex(singleton);CloseHandle(singleton);if(testing)std::filesystem::remove_all(testingData);return 0;
     }catch(const std::exception& e){std::cerr<<e.what()<<"\n";return 1;}
 }

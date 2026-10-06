@@ -65,6 +65,7 @@ foreach ($arch in @('x64','x86')) {
 }
 Run (Join-Path $stage 'SailKingBroker.exe') @('--smoke')
 Run (Join-Path $stage 'SailKingBroker.exe') @('--prepare-data')
+Run (Join-Path $stage 'SailKingProbe.exe') @('--ipc-smoke')
 # Production installers can be signed by setting a SignTool command externally.
 if (!$SkipInstaller) {
  $iscc = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'

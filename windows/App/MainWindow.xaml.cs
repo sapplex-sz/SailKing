@@ -56,7 +56,7 @@ public partial class MainWindow : Window {
     private static void Open(string destination)=>Process.Start(new ProcessStartInfo(destination){UseShellExecute=true});
     private void KeyboardSettingsClicked(object sender,RoutedEventArgs e)=>Open("ms-settings:regionlanguage");
     private void ReleaseClicked(object sender,RoutedEventArgs e)=>Open("https://github.com/sapplex-sz/SailKing/releases");
-    private void UninstallClicked(object sender,RoutedEventArgs e)=>Open("ms-settings:appsfeatures");
+    private void UninstallClicked(object sender,RoutedEventArgs e){Open("ms-settings:appsfeatures");Close();}
     private void HelpClicked(object sender,RoutedEventArgs e)=>Open("https://github.com/sapplex-sz/SailKing/blob/main/docs/WINDOWS.md");
     private void FinishClicked(object sender,RoutedEventArgs e){if(!practiced)return;Save("Onboarded",1);ShowPage("Workspace");}
     private void FollowClicked(object sender,RoutedEventArgs e){Save("CandidatePinned",0);Status.Text="候选窗口将跟随光标。";}

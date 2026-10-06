@@ -26,6 +26,7 @@ internal sealed class InputService : IDisposable {
             }
             await pipe.WriteAsync(buffer.ToArray(),deadline.Token);
             var bytes=new byte[45860];await pipe.ReadExactlyAsync(bytes,deadline.Token);
+            await pipe.WriteAsync(new byte[]{0xa5},deadline.Token);
             using var reader=new BinaryReader(new MemoryStream(bytes),Encoding.Unicode);
             if(reader.ReadUInt32()!=Magic||reader.ReadUInt32()!=1)throw new InvalidDataException("输入服务版本不匹配。");
             bool available=reader.ReadUInt32()!=0,handled=reader.ReadUInt32()!=0,english=reader.ReadUInt32()!=0,translation=reader.ReadUInt32()!=0;

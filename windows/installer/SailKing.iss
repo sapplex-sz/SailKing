@@ -44,8 +44,15 @@ begin
  Result := Exec(ExpandConstant('{sys}\regsvr32.exe'), Args + '"' + ExpandConstant('{app}\native\{#AppVersion}\x64\SailKingTip.dll') + '"', '', SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 0);
  if Result then Result := Exec(ExpandConstant('{syswow64}\regsvr32.exe'), Args + '"' + ExpandConstant('{app}\native\{#AppVersion}\x86\SailKingTip.dll') + '"', '', SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 0);
 end;
+procedure StopBroker;
+var Code: Integer;
+begin
+ if FileExists(ExpandConstant('{app}\SailKingProbe.exe')) then
+  Exec(ExpandConstant('{app}\SailKingProbe.exe'), '--stop-broker', '', SW_HIDE, ewWaitUntilTerminated, Code);
+end;
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
+ if CurStep = ssInstall then StopBroker;
  if CurStep = ssPostInstall then begin
   if not RegisterTip(False) then begin
    RegisterTip(True);
@@ -55,5 +62,5 @@ begin
 end;
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
- if CurUninstallStep = usUninstall then RegisterTip(True);
+ if CurUninstallStep = usUninstall then begin StopBroker; RegisterTip(True); end;
 end;
