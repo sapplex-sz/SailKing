@@ -29,10 +29,12 @@ if (!(Test-Path "$llama\CMakeLists.txt")) { Run 'tar.exe' @('-xf',$llamaArchive,
 # Windows uses Q4, so the legacy ARM-only STQ model remapping is not applied.
 $stage = Join-Path $Output 'stage'
 New-Item -ItemType Directory -Force $stage | Out-Null
+Run 'dotnet.exe' @('publish',"$root\windows\App\SailKing.csproj",'-c','Release','-r','win-x64','--self-contained','true','-o',$stage,'-p:PublishSingleFile=false','-p:DebugType=None')
 foreach ($arch in @('x64','Win32')) {
  $build = Join-Path $Output $arch
  $broker = if ($arch -eq 'x64') { 'ON' } else { 'OFF' }
  Run 'cmake.exe' @('-S',"$root\windows",'-B',$build,'-A',$arch,"-DSAILKING_BROKER=$broker","-DSAILKING_RIME_ROOT=$rime/dist","-DSAILKING_LLAMA_ROOT=$llama")
+ Run 'cmake.exe' @('--build',$build,'--config','Release','--target','SailKingTip','SailKingProbe','SailKingCoreTests','--parallel','4')
  Run 'cmake.exe' @('--build',$build,'--config','Release','--parallel','4')
  Run 'ctest.exe' @('--test-dir',$build,'-C','Release','--output-on-failure')
  $tipStage = Join-Path $stage ('native\0.4.0-preview.1\'+ $(if ($arch -eq 'x64') { 'x64' } else { 'x86' }))
@@ -41,7 +43,7 @@ foreach ($arch in @('x64','Win32')) {
  if ($arch -eq 'x64') { Copy-Item "$build\Release\SailKingBroker.exe","$build\Release\SailKingProbe.exe","$build\Release\CHaHaRuntime.dll" $stage }
 }
 Copy-Item "$rime\dist\lib\rime.dll" $stage
-Run 'dotnet.exe' @('publish',"$root\windows\App\SailKing.csproj",'-c','Release','-r','win-x64','--self-contained','true','-o',$stage,'-p:PublishSingleFile=false','-p:DebugType=None')
+
 $rimeData = Join-Path $stage 'RimeData'
 New-Item -ItemType Directory -Force $rimeData | Out-Null
 Copy-Item "$root\Vendor\RimeData\*.yaml","$root\Vendor\RimeData\essay.txt" $rimeData

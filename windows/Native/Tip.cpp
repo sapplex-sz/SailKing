@@ -6,6 +6,7 @@
 #include <atomic>
 #include <functional>
 #include <commctrl.h>
+#include <shellapi.h>
 using Microsoft::WRL::ComPtr;
 using namespace sailking;
 namespace {
