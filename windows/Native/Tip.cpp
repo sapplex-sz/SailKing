@@ -172,7 +172,7 @@ class Tip final:public ITfTextInputProcessorEx,public ITfKeyEventSink,public ITf
     }
     int scaled(int n)const{return MulDiv(n,int(dpi),96);}
     int height()const{
-        int h=62+((state.count+2)/3)*32;
+        int h=(state.preedit[0]?62:36)+((state.count+2)/3)*32;
         if(state.draft[0])h+=34;
         if(state.job!=Job::idle)h+=state.job==Job::ready?100:38;
         return scaled(h+22);
@@ -208,7 +208,7 @@ class Tip final:public ITfTextInputProcessorEx,public ITfKeyEventSink,public ITf
         text(L"出海王",36,8,75,24);text(state.english?L"英":L"中",120,8,30,24);
         text(state.translation?L"翻译输入":L"普通输入",275,8,95,24);
         SetTextColor(dc,RGB(20,99,183));text(wide(state.preedit),12,36,395,25);
-        int y=62;if(state.draft[0]){SetTextColor(dc,RGB(60,70,82));text(wide(state.draft),12,y,395,32);y+=34;}
+        int y=state.preedit[0]?62:36;if(state.draft[0]){SetTextColor(dc,RGB(60,70,82));text(wide(state.draft),12,y,395,32);y+=34;}
         for(int i=0;i<state.count;++i){int x=12+(i%3)*134,row=y+(i/3)*32;
             if(i==state.selected){RECT r{scaled(x-2),scaled(row),scaled(x+126),scaled(row+29)};HBRUSH b=CreateSolidBrush(RGB(221,233,248));FillRect(dc,&r,b);DeleteObject(b);}
             SetTextColor(dc,RGB(110,118,130));text(std::to_wstring(i+1),x+3,row+5,15,24);SetTextColor(dc,RGB(32,43,57));text(wide(state.candidates[i]),x+24,row+3,100,25);
@@ -231,7 +231,7 @@ class Tip final:public ITfTextInputProcessorEx,public ITfKeyEventSink,public ITf
         case WM_LBUTTONUP:{int x=MulDiv(int(short(LOWORD(lp))),96,int(tip->dpi)),y=MulDiv(int(short(HIWORD(lp))),96,int(tip->dpi));
             if(y<30&&x>=110&&x<160)tip->request(Operation::toggleEnglish);
             else if(y<30&&x>=270)tip->request(Operation::toggleTranslation);
-            else{int top=62+(tip->state.draft[0]?34:0),index=((y-top)/32)*3+(x-12)/134;if(y>=top&&x>=12&&index>=0&&index<tip->state.count)tip->request(Operation::select,uint32_t(index));}return 0;}
+            else{int top=(tip->state.preedit[0]?62:36)+(tip->state.draft[0]?34:0),index=((y-top)/32)*3+(x-12)/134;if(y>=top&&x>=12&&index>=0&&index<tip->state.count)tip->request(Operation::select,uint32_t(index));}return 0;}
         case WM_CONTEXTMENU:{HMENU menu=CreatePopupMenu();AppendMenuW(menu,MF_STRING,1,L"跟随光标");AppendMenuW(menu,MF_STRING,2,L"打开出海王设置");POINT p;GetCursorPos(&p);int choice=TrackPopupMenu(menu,TPM_RETURNCMD|TPM_NONOTIFY,p.x,p.y,0,hwnd,nullptr);DestroyMenu(menu);if(choice==1){saveNumber(L"CandidatePinned",0);tip->request(Operation::status);}if(choice==2){auto root=executableDirectory(module).parent_path().parent_path().parent_path();auto app=setting(L"InstallPath",root.c_str())+L"\\SailKing.exe";ShellExecuteW(nullptr,L"open",app.c_str(),L"--settings",nullptr,SW_SHOWNORMAL);}return 0;}
         case WM_TIMER:{Request r=tip->identity;r.operation=Operation::status;Response out;if(!exchange(r,out)){tip->hide();return 0;}tip->state=out;InvalidateRect(hwnd,nullptr,TRUE);if(out.job!=Job::running){KillTimer(hwnd,1);RECT rect;GetWindowRect(hwnd,&rect);SetWindowPos(hwnd,nullptr,0,0,tip->scaled(420),tip->height(),SWP_NOMOVE|SWP_NOACTIVATE|SWP_NOZORDER);}return 0;}
         case WM_DPICHANGED:{tip->dpi=HIWORD(wp);if(tip->font)DeleteObject(tip->font);tip->font=CreateFontW(-tip->scaled(14),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY,DEFAULT_PITCH,L"Microsoft YaHei UI");return 0;}
