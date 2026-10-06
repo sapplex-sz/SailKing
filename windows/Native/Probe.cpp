@@ -38,8 +38,10 @@ int wmain(int argc,wchar_t** argv){
             if(!call(sailking::Operation::toggleEnglish)||!reply.english)result=24;
             if(!call(sailking::Operation::key,'A')||reply.handled||reply.commit[0])result=25;
         }
-        call(sailking::Operation::shutdown);DWORD ended=WaitForSingleObject(child.hProcess,10000);CloseHandle(child.hThread);CloseHandle(child.hProcess);
-        if(ended!=WAIT_OBJECT_0)result=26;
+        std::cout<<"IPC checks before shutdown: "<<result<<"\n";
+        bool shutdown=call(sailking::Operation::shutdown);DWORD ended=WaitForSingleObject(child.hProcess,10000);CloseHandle(child.hThread);CloseHandle(child.hProcess);
+        if(!result&&!shutdown)result=27;
+        if(!result&&ended!=WAIT_OBJECT_0)result=26;
         std::cout<<"{\"ipcSmoke\":"<<(result?"false":"true")<<",\"code\":"<<result<<"}\n";return result;
     }
     else if(op==L"--stop-broker"){

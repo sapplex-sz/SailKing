@@ -253,9 +253,9 @@ int wmain(int argc,wchar_t** argv){
         if(!ConvertStringSecurityDescriptorToSecurityDescriptorW(acl.c_str(),SDDL_REVISION_1,&descriptor,nullptr))return 3;
         SECURITY_ATTRIBUTES security{sizeof(security),descriptor,FALSE};
         DWORD currentSession=0;ProcessIdToSessionId(GetCurrentProcessId(),&currentSession);
+        HANDLE pipe=CreateNamedPipeW(name.c_str(),PIPE_ACCESS_DUPLEX|FILE_FLAG_OVERLAPPED,PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE|PIPE_WAIT|PIPE_REJECT_REMOTE_CLIENTS,1,sizeof(Response),sizeof(Request),1000,&security);
+        if(pipe==INVALID_HANDLE_VALUE)return 4;
         while(!stopping){
-            HANDLE pipe=CreateNamedPipeW(name.c_str(),PIPE_ACCESS_DUPLEX|FILE_FLAG_OVERLAPPED,PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE|PIPE_WAIT|PIPE_REJECT_REMOTE_CLIENTS,1,sizeof(Response),sizeof(Request),1000,&security);
-            if(pipe==INVALID_HANDLE_VALUE)return 4;
             OVERLAPPED connection{};connection.hEvent=CreateEventW(nullptr,TRUE,FALSE,nullptr);
             bool connected=ConnectNamedPipe(pipe,&connection)!=FALSE;
             if(!connected){DWORD error=GetLastError();if(error==ERROR_PIPE_CONNECTED)connected=true;else if(error==ERROR_IO_PENDING)connected=WaitForSingleObject(connection.hEvent,INFINITE)==WAIT_OBJECT_0;}
@@ -269,13 +269,16 @@ int wmain(int argc,wchar_t** argv){
                         HANDLE peer=OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,FALSE,pid);wchar_t image[32768]{};DWORD length=32768;
                         if(peer){permitted=QueryFullProcessImageNameW(peer,0,image,&length)&&std::filesystem::path(image)==root/L"SailKingProbe.exe";CloseHandle(peer);}
                     }
-                    if(!permitted){DisconnectNamedPipe(pipe);CloseHandle(pipe);continue;}
+                    if(!permitted){DisconnectNamedPipe(pipe);continue;}
                     try{response=process(request);}catch(const std::exception& e){response.available=1;copy(response.error,fromUtf8(e.what()));}
                     if(transfer(pipe,&response,sizeof(response),true,500)){BYTE acknowledged=0;transfer(pipe,&acknowledged,1,false,500);}
                 }
             }
-            DisconnectNamedPipe(pipe);CloseHandle(pipe);
+            // Keep the endpoint alive between requests so a fast next keystroke
+            // cannot race a close/recreate interval and get FILE_NOT_FOUND.
+            DisconnectNamedPipe(pipe);
         }
+        CloseHandle(pipe);
         LocalFree(descriptor);
         {std::lock_guard<std::mutex> serial(engineMutex);haha_engine_destroy(engine);engine=nullptr;}
         {std::lock_guard<std::mutex> lock(stateMutex);for(auto& item:sessions){if(item.second->rime)api->destroy_session(item.second->rime);item.second->rime=0;}sessions.clear();api->finalize();}
