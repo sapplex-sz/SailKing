@@ -132,7 +132,8 @@ class Tip final:public ITfTextInputProcessorEx,public ITfKeyEventSink,public ITf
     }
     void updateConversion(){
         if(!manager)return;ComPtr<ITfCompartmentMgr> cm;ComPtr<ITfCompartment> c;
-        if(SUCCEEDED(manager.As(&cm))&&SUCCEEDED(cm->GetCompartment(GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION,&c))){VARIANT value;VariantInit(&value);value.vt=VT_I4;value.lVal=state.english?0:TF_CONVERSIONMODE_NATIVE;c->SetValue(client,&value);}
+        if(SUCCEEDED(manager.As(&cm))&&SUCCEEDED(cm->GetCompartment(GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION,&c))){VARIANT value;VariantInit(&value);value.vt=VT_I4;value.lVal=state.english?0:TF_CONVERSIONMODE_NATIVE;c->SetValue(client,&value);
+            if(SUCCEEDED(cm->GetCompartment(GUID_COMPARTMENT_KEYBOARD_OPENCLOSE,&c))){value.lVal=1;c->SetValue(client,&value);}}
     }
     void adviseEdit(){
         if(!context)return;ComPtr<ITfSource> source;if(SUCCEEDED(context.As(&source)))source->AdviseSink(IID_ITfTextEditSink,static_cast<ITfTextEditSink*>(this),&editCookie);
@@ -339,7 +340,7 @@ HRESULT registration(bool install){
 }
 }
 BOOL WINAPI DllMain(HINSTANCE instance,DWORD reason,LPVOID){if(reason==DLL_PROCESS_ATTACH){module=instance;DisableThreadLibraryCalls(instance);}return TRUE;}
-extern "C" __declspec(dllexport) HRESULT __stdcall DllGetClassObject(REFCLSID clsid,REFIID iid,void** out){if(clsid!=tipClsid)return CLASS_E_CLASSNOTAVAILABLE;auto factory=new(std::nothrow) Factory();if(!factory)return E_OUTOFMEMORY;HRESULT hr=factory->QueryInterface(iid,out);factory->Release();return hr;}
-extern "C" __declspec(dllexport) HRESULT __stdcall DllCanUnloadNow(){return liveObjects==0?S_OK:S_FALSE;}
-extern "C" __declspec(dllexport) HRESULT __stdcall DllRegisterServer(){try{return registration(true);}catch(...){return E_FAIL;}}
-extern "C" __declspec(dllexport) HRESULT __stdcall DllUnregisterServer(){try{return registration(false);}catch(...){return E_FAIL;}}
+STDAPI DllGetClassObject(REFCLSID clsid,REFIID iid,void** out){if(clsid!=tipClsid)return CLASS_E_CLASSNOTAVAILABLE;auto factory=new(std::nothrow) Factory();if(!factory)return E_OUTOFMEMORY;HRESULT hr=factory->QueryInterface(iid,out);factory->Release();return hr;}
+STDAPI DllCanUnloadNow(){return liveObjects==0?S_OK:S_FALSE;}
+STDAPI DllRegisterServer(){try{return registration(true);}catch(...){return E_FAIL;}}
+STDAPI DllUnregisterServer(){try{return registration(false);}catch(...){return E_FAIL;}}

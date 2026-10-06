@@ -18,6 +18,7 @@ RimeApi* api=nullptr;
 std::mutex stateMutex,engineMutex;
 std::map<std::array<uint8_t,16>,std::shared_ptr<struct Session>> sessions;
 haha_engine* engine=nullptr;
+bool testing=false;
 struct Cancel {
     haha_cancellation* value=haha_cancellation_create();
     ~Cancel(){haha_cancellation_destroy(value);}
@@ -25,13 +26,14 @@ struct Cancel {
 };
 struct Session {
     RimeSessionId rime=0;
-    bool english=false,translation=false;
+    bool english=false,translation=false,workspace=false;
+    std::wstring source=L"auto",target=L"en";
     std::u16string draft,result,error;
     Job job=Job::idle;
     uint64_t generation=0;
     std::shared_ptr<Cancel> cancellation;
     std::chrono::steady_clock::time_point touched=std::chrono::steady_clock::now();
-    ~Session(){if(cancellation)cancellation->request();if(rime)api->destroy_session(rime);}
+    ~Session(){if(cancellation)cancellation->request();}
 };
 void cancel(Session& s) {
     if(s.cancellation)s.cancellation->request();s.cancellation.reset();++s.generation;
@@ -108,7 +110,7 @@ std::shared_ptr<Session> sessionFor(const Request& r) {
     s=std::make_shared<Session>();s->rime=api->create_session();
     if(!s->rime||!api->select_schema(s->rime,"luna_pinyin_simp"))throw std::runtime_error("拼音词库初始化失败，请重新安装。");
     api->set_option(s->rime,"ascii_mode",False);api->set_option(s->rime,"zh_hans",True);api->set_option(s->rime,"full_shape",False);
-    s->translation=settingNumber(L"TranslationEnabled",0)!=0;return s;
+    s->translation=!testing&&settingNumber(L"TranslationEnabled",0)!=0;s->source=setting(L"Source",L"auto");s->target=setting(L"Target",L"en");return s;
 }
 std::u16string takeCommit(Session& s) {
     RIME_STRUCT(RimeCommit,commit);std::u16string text;
@@ -134,9 +136,14 @@ Response process(const Request& r) {
     if(!valid(r))return {};
     // Prevent stale sessions from accumulating when a host exits without Deactivate.
     auto now=std::chrono::steady_clock::now();
-    for(auto i=sessions.begin();i!=sessions.end();)if(now-i->second->touched>std::chrono::minutes(30)&&i->second->job!=Job::running)i=sessions.erase(i);else ++i;
-    if(r.operation==Operation::close){sessions.erase(r.session);Response out;out.available=1;return out;}
+    for(auto i=sessions.begin();i!=sessions.end();)if(now-i->second->touched>std::chrono::minutes(30)&&i->second->job!=Job::running){if(i->second->rime){api->destroy_session(i->second->rime);i->second->rime=0;}i=sessions.erase(i);}else ++i;
+    if(r.operation==Operation::close){auto it=sessions.find(r.session);if(it!=sessions.end()){cancel(*it->second);if(it->second->rime)api->destroy_session(it->second->rime);it->second->rime=0;sessions.erase(it);}Response out;out.available=1;return out;}
     auto s=sessionFor(r);std::u16string commit;bool handled=false;
+    if(!testing&&!s->workspace&&r.operation!=Operation::translateText){
+        bool mode=settingNumber(L"TranslationEnabled",0)!=0;auto source=setting(L"Source",L"auto"),target=setting(L"Target",L"en");
+        if(mode!=s->translation){cancel(*s);api->clear_composition(s->rime);s->draft.clear();s->translation=mode;}
+        if(source!=s->source||target!=s->target){cancel(*s);s->source=source;s->target=target;}
+    }
     switch(r.operation){
     case Operation::reset: cancel(*s);api->clear_composition(s->rime);s->draft.clear();handled=true;break;
     case Operation::cancel: cancel(*s);handled=true;break;
@@ -147,10 +154,10 @@ Response process(const Request& r) {
         cancel(*s);api->commit_composition(s->rime);commit=takeCommit(*s);
         if(s->translation)appendDraft(*s,commit);s->translation=!s->translation;
         if(!s->translation){commit=s->draft;s->draft.clear();}
-        saveNumber(L"TranslationEnabled",s->translation);handled=true;break;
+        if(!testing)saveNumber(L"TranslationEnabled",s->translation);handled=true;break;
     case Operation::translateText:
         if(!terminated(r.text)||std::u16string(r.text).empty())break;
-        beginTranslation(s,r.text,wide(r.source),wide(r.target));handled=true;break;
+        s->workspace=true;beginTranslation(s,r.text,wide(r.source),wide(r.target));handled=true;break;
     case Operation::commitOriginal:
         cancel(*s);api->commit_composition(s->rime);commit=s->draft+takeCommit(*s);s->draft.clear();handled=true;break;
     case Operation::select:
@@ -192,6 +199,7 @@ Response process(const Request& r) {
     return out;
 }
 int smoke(const std::filesystem::path& root){
+    testing=true;
     auto data=std::filesystem::temp_directory_path()/(L"SailKing-Rime-Test-"+std::to_wstring(GetCurrentProcessId()));
     initialize(root,data);Request r;r.session[0]=1;Response out;
     for(char c:std::string("nihao")){r.operation=Operation::key;r.key=c;out=process(r);if(!out.handled)return 10;}
@@ -221,15 +229,19 @@ int wmain(int argc,wchar_t** argv){
         SECURITY_ATTRIBUTES security{sizeof(security),descriptor,FALSE};
         DWORD currentSession=0;ProcessIdToSessionId(GetCurrentProcessId(),&currentSession);
         while(true){
-            HANDLE pipe=CreateNamedPipeW(name.c_str(),PIPE_ACCESS_DUPLEX,PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE|PIPE_WAIT|PIPE_REJECT_REMOTE_CLIENTS,1,sizeof(Response),sizeof(Request),1000,&security);
+            HANDLE pipe=CreateNamedPipeW(name.c_str(),PIPE_ACCESS_DUPLEX|FILE_FLAG_OVERLAPPED,PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE|PIPE_WAIT|PIPE_REJECT_REMOTE_CLIENTS,1,sizeof(Response),sizeof(Request),1000,&security);
             if(pipe==INVALID_HANDLE_VALUE)return 4;
-            if(ConnectNamedPipe(pipe,nullptr)||GetLastError()==ERROR_PIPE_CONNECTED){
+            OVERLAPPED connection{};connection.hEvent=CreateEventW(nullptr,TRUE,FALSE,nullptr);
+            bool connected=ConnectNamedPipe(pipe,&connection)!=FALSE;
+            if(!connected){DWORD error=GetLastError();if(error==ERROR_PIPE_CONNECTED)connected=true;else if(error==ERROR_IO_PENDING)connected=WaitForSingleObject(connection.hEvent,INFINITE)==WAIT_OBJECT_0;}
+            CloseHandle(connection.hEvent);
+            if(connected){
                 ULONG pid=0;DWORD clientSession=0;
-                Request request;Response response;DWORD read=0,written=0;
+                Request request;Response response;
                 if(GetNamedPipeClientProcessId(pipe,&pid)&&ProcessIdToSessionId(pid,&clientSession)&&clientSession==currentSession&&
-                    ReadFile(pipe,&request,sizeof(request),&read,nullptr)&&read==sizeof(request)){
+                    transfer(pipe,&request,sizeof(request),false,500)){
                     try{response=process(request);}catch(const std::exception& e){response.available=1;copy(response.error,fromUtf8(e.what()));}
-                    if(WriteFile(pipe,&response,sizeof(response),&written,nullptr))FlushFileBuffers(pipe);
+                    transfer(pipe,&response,sizeof(response),true,500);
                 }
             }
             DisconnectNamedPipe(pipe);CloseHandle(pipe);

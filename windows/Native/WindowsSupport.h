@@ -87,4 +87,3 @@ inline bool exchange(const Request& request,Response& response,DWORD timeout=180
     } catch(...) { return false; }
 }
 }
-}

@@ -17,7 +17,8 @@ function Download([string]$Url,[string]$Hash,[string]$File) {
 $rimeArchive = Join-Path $Cache 'rime-1.17.0-msvc-x64.7z'
 Download 'https://github.com/rime/librime/releases/download/1.17.0/rime-33e7814-Windows-msvc-x64.7z' '7478c7caa4ff6b37de86daba1f7ce4a994a4f5ba24872a820fb2b3a9b01fed15' $rimeArchive
 $rime = Join-Path $Cache 'rime-1.17.0-x64'
-$sevenZip = (Get-Command 7z.exe -ErrorAction SilentlyContinue).Source
+$sevenCommand = Get-Command 7z.exe -ErrorAction SilentlyContinue
+$sevenZip = if ($sevenCommand) { $sevenCommand.Source } else { '' }
 if (!$sevenZip) { $sevenZip = 'C:\Program Files\7-Zip\7z.exe' }
 if (!(Test-Path "$rime\dist\include\rime_api.h")) { Run $sevenZip @('x','-y',"-o$rime",$rimeArchive) }
 $revision = '1e411d8f5a1e23525fa3265dfb4bd76265465397'
@@ -58,6 +59,10 @@ $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Componen
 $redist = Get-ChildItem "$vs\VC\Redist\MSVC" -Directory | Sort-Object Name -Descending | Select-Object -First 1
 $crt = Get-ChildItem "$($redist.FullName)\x64" -Directory -Filter '*CRT' | Select-Object -First 1
 Copy-Item "$($crt.FullName)\*.dll" $stage
+foreach ($arch in @('x64','x86')) {
+ $runtime = Get-ChildItem "$($redist.FullName)\$arch" -Directory -Filter '*CRT' | Select-Object -First 1
+ Copy-Item "$($runtime.FullName)\*.dll" (Join-Path $stage "native\0.4.0-preview.1\$arch")
+}
 Run (Join-Path $stage 'SailKingBroker.exe') @('--smoke')
 Run (Join-Path $stage 'SailKingBroker.exe') @('--prepare-data')
 # Production installers can be signed by setting a SignTool command externally.
