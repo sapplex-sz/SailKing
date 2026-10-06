@@ -201,6 +201,26 @@ Response process(const Request& r) {
     if(!copy(out.commit,commit)){out.handled=0;copy(out.error,u"文字过长，请缩短后重试。");}
     return out;
 }
+int translationSmoke(){
+    auto model=trustedModel();auto local=haha_engine_create();auto cancellation=haha_cancellation_create();
+    if(!local||!cancellation)return 30;
+    std::string source="您好，您的订单 AB-123 已发货。请留意物流更新。";
+    auto instruction=prompt(source,"zh-Hans","en");char* output=nullptr;char* error=nullptr;haha_metrics metrics{};
+    int code=haha_engine_translate(local,utf8(model.wstring()).c_str(),instruction.c_str(),256,cancellation,nullptr,nullptr,&output,&error,&metrics);
+    std::string result=output?output:"";haha_string_free(output);haha_string_free(error);
+    if(code!=HAHA_OK||result.empty()||!entitiesIntact(source,result)){
+        std::cerr<<"Translation smoke failed: "<<code<<"\n";haha_cancellation_destroy(cancellation);haha_engine_destroy(local);return 31;
+    }
+    std::cout<<"Local translation: "<<result<<"\n"<<"Prompt tokens: "<<metrics.prompt_tokens<<"; output tokens: "<<metrics.generated_tokens<<"; first token seconds: "<<metrics.first_token_seconds<<"; generation seconds: "<<metrics.generation_seconds<<"\n";
+    haha_cancellation_destroy(cancellation);cancellation=haha_cancellation_create();
+    std::thread cancelTask([cancellation]{std::this_thread::sleep_for(std::chrono::milliseconds(30));haha_cancellation_request(cancellation);});
+    output=error=nullptr;
+    code=haha_engine_translate(local,utf8(model.wstring()).c_str(),instruction.c_str(),2048,cancellation,nullptr,nullptr,&output,&error,&metrics);
+    cancelTask.join();haha_string_free(output);haha_string_free(error);haha_cancellation_destroy(cancellation);haha_engine_destroy(local);
+    if(code!=HAHA_CANCELLED)return 32;
+    std::cout<<"Native cancellation passed\n";return 0;
+}
+
 int smoke(const std::filesystem::path& root){
     testing=true;
     auto data=std::filesystem::temp_directory_path()/(L"SailKing-Rime-Test-"+std::to_wstring(GetCurrentProcessId()));
@@ -222,6 +242,7 @@ int wmain(int argc,wchar_t** argv){
         auto root=executableDirectory();
         if(argc>1&&std::wstring(argv[1])==L"--ipc-test"){testing=true;testingData=std::filesystem::temp_directory_path()/(L"SailKing-IPC-Test-"+std::to_wstring(GetCurrentProcessId()));}
         if(argc>1&&std::wstring(argv[1])==L"--smoke")return smoke(root);
+        if(argc>1&&std::wstring(argv[1])==L"--translation-smoke")return translationSmoke();
         if(argc>1&&std::wstring(argv[1])==L"--prepare-data"){initialize(root,root/L"RimeData");api->finalize();return 0;}
         auto name=pipeName();auto mutexName=L"Local\\"+name.substr(9);
         HANDLE singleton=CreateMutexW(nullptr,TRUE,mutexName.c_str());if(!singleton)return 2;if(GetLastError()==ERROR_ALREADY_EXISTS){CloseHandle(singleton);return 0;}
