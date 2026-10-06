@@ -63,12 +63,14 @@ int wmain(int argc,wchar_t** argv){
         if(snapshot!=INVALID_HANDLE_VALUE)CloseHandle(snapshot);hr=S_OK;
     }
     else if(op==L"--enable")hr=profiles->EnableLanguageProfile(tipClsid,inputLanguage,profileGuid,TRUE);
-    else if(op==L"--self-test"){
+    else if(op==L"--self-test"||op==L"--activation-test"){
         ComPtr<ITfTextInputProcessorEx> tip;ComPtr<ITfThreadMgr> manager;TfClientId id=TF_CLIENTID_NULL;
         const char* stage="class";hr=CoCreateInstance(tipClsid,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&tip));
-        if(SUCCEEDED(hr)){stage="manager";hr=CoCreateInstance(CLSID_TF_ThreadMgr,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&manager));}
-        if(SUCCEEDED(hr)){stage="thread";hr=manager->Activate(&id);}
-        if(SUCCEEDED(hr)){stage="service";hr=tip->ActivateEx(manager.Get(),id,0);if(SUCCEEDED(hr))tip->Deactivate();manager->Deactivate();}
+        if(op==L"--activation-test"){
+            if(SUCCEEDED(hr)){stage="manager";hr=CoCreateInstance(CLSID_TF_ThreadMgr,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&manager));}
+            if(SUCCEEDED(hr)){stage="thread";hr=manager->Activate(&id);}
+            if(SUCCEEDED(hr)){stage="service";hr=tip->ActivateEx(manager.Get(),id,0);if(SUCCEEDED(hr))tip->Deactivate();manager->Deactivate();}
+        }
         if(SUCCEEDED(hr)){
             stage="profile-export";
             auto dll=sailking::executableDirectory()/L"SailKingTip.dll";
@@ -79,7 +81,7 @@ int wmain(int argc,wchar_t** argv){
             if(!active)hr=E_FAIL;else (void)active();
             if(library)FreeLibrary(library);
         }
-        std::cout<<"{\"comActivation\":"<<(SUCCEEDED(hr)?"true":"false")<<",\"stage\":\""<<stage<<"\",\"hresult\":"<<static_cast<long>(hr)<<"}\n";
+        std::cout<<"{\""<<(op==L"--activation-test"?"serviceInitialization":"comClass")<<"\":"<<(SUCCEEDED(hr)?"true":"false")<<",\"stage\":\""<<stage<<"\",\"hresult\":"<<static_cast<long>(hr)<<"}\n";
     }else{
         BOOL enabled=FALSE;hr=profiles->IsEnabledLanguageProfile(tipClsid,inputLanguage,profileGuid,&enabled);
         std::cout<<"{\"registered\":"<<(SUCCEEDED(hr)?"true":"false")<<",\"enabled\":"<<(enabled?"true":"false")<<"}\n";

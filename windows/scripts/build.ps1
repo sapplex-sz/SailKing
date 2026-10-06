@@ -5,7 +5,7 @@ $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 if (!$Output) { $Output = Join-Path $root 'build\windows' }
 if (!$Cache) { $Cache = Join-Path $env:LOCALAPPDATA 'SailKingBuildCache' }
 New-Item -ItemType Directory -Force $Output,$Cache | Out-Null
-function Run([string]$Executable,[string[]]$Arguments) { & $Executable @Arguments; if ($LASTEXITCODE -ne 0) { throw "$Executable failed ($LASTEXITCODE)" } }
+function Run([string]$Executable,[string[]]$Arguments) { & $Executable @Arguments | Out-Host; if ($LASTEXITCODE -ne 0) { throw "$Executable failed ($LASTEXITCODE)" } }
 function Download([string]$Url,[string]$Hash,[string]$File) {
  if (!(Test-Path $File) -or (Get-FileHash $File -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Hash) {
   $temporary = "$File.download"
