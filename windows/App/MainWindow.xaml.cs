@@ -15,10 +15,10 @@ public partial class MainWindow : Window {
     private readonly DispatcherTimer automatic=new(){Interval=TimeSpan.FromMilliseconds(700)};
     private CancellationTokenSource? translation,download;
     private bool initialized,registered,enabled,practiced,composing,closing;
-    private readonly bool openSettings;
+    private readonly bool openSettings,preview;
     private long generation;
-    public MainWindow(bool settings=false) {
-        openSettings=settings;InitializeComponent();
+    public MainWindow(bool settings=false,bool renderingPreview=false) {
+        openSettings=settings;preview=renderingPreview;InitializeComponent();
         SourceLanguage.ItemsSource=new[]{new LanguageOption("auto","自动识别")}.Concat(Languages).ToArray();TargetLanguage.ItemsSource=Languages;
         SourceLanguage.SelectedItem=((LanguageOption[])SourceLanguage.ItemsSource).FirstOrDefault(x=>x.Code==Get("Source","auto"))??((LanguageOption[])SourceLanguage.ItemsSource)[0];
         TargetLanguage.SelectedItem=Languages.FirstOrDefault(x=>x.Code==Get("Target","en"))??Languages[2];
@@ -32,13 +32,14 @@ public partial class MainWindow : Window {
         AddPhrases();initialized=true;ShowPage(openSettings?"Settings":GetNumber("Onboarded")==0?"Guide":"Workspace");UpdateModelStatus();
     }
     private static RegistryKey PreferencesKey()=>Registry.CurrentUser.CreateSubKey("Software\\SailKing");
-    private static string Get(string name,string fallback){using var key=PreferencesKey();return key.GetValue(name) as string??fallback;}
-    private static int GetNumber(string name){using var key=PreferencesKey();return key.GetValue(name) is int n?n:0;}
+    private static string Get(string name,string fallback){using var key=Registry.CurrentUser.OpenSubKey("Software\\SailKing");return key?.GetValue(name) as string??fallback;}
+    private static int GetNumber(string name){using var key=Registry.CurrentUser.OpenSubKey("Software\\SailKing");return key?.GetValue(name) is int n?n:0;}
     private static void Save(string name,object value){using var key=PreferencesKey();key.SetValue(name,value);}
     private void ShowPage(string name){foreach(var element in new FrameworkElement[]{Workspace,Settings,Phrases,Guide})element.Visibility=element.Name==name?Visibility.Visible:Visibility.Collapsed;PageTitle.Text=name switch{"Settings"=>"设置","Phrases"=>"常用表达","Guide"=>"新手设置",_=>"翻译工作台"};Status.Text="";}
     private void Navigate(object sender,RoutedEventArgs e){if(sender is Button b&&b.Tag is string page)ShowPage(page);}
     private async void OnLoaded(object sender,RoutedEventArgs e){await RefreshInput();}
     private async Task RefreshInput(){
+        if(preview)return;
         try {
             var info=new ProcessStartInfo(Path.Combine(AppContext.BaseDirectory,"SailKingProbe.exe"),"--profiles"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true};
             using var process=Process.Start(info)??throw new IOException("输入法检测组件不存在。");
@@ -69,16 +70,17 @@ public partial class MainWindow : Window {
     }
     private void CancelDownloadClicked(object sender,RoutedEventArgs e)=>download?.Cancel();
     private async void TranslationModeChanged(object sender,RoutedEventArgs e){
-        if(!initialized)return;Save("TranslationEnabled",TranslationMode.IsChecked==true?1:0);
+        if(!initialized||preview)return;Save("TranslationEnabled",TranslationMode.IsChecked==true?1:0);
         try{await service.Send(Operation.Cancel);}catch(Exception ex){Status.Text=ex.Message;}
     }
     private async void LanguageChanged(object sender,SelectionChangedEventArgs e){
-        if(!initialized)return;Save("Source",((LanguageOption)SourceLanguage.SelectedItem).Code);Save("Target",((LanguageOption)TargetLanguage.SelectedItem).Code);await InvalidateTranslation();
+        if(!initialized||preview)return;Save("Source",((LanguageOption)SourceLanguage.SelectedItem).Code);Save("Target",((LanguageOption)TargetLanguage.SelectedItem).Code);await InvalidateTranslation();
     }
-    private void AutomaticChanged(object sender,RoutedEventArgs e){if(!initialized)return;Save("AutoTranslate",Automatic.IsChecked==true?1:0);if(Automatic.IsChecked==true&&!composing&&!string.IsNullOrWhiteSpace(SourceText.Text))automatic.Start();else automatic.Stop();}
+    private void AutomaticChanged(object sender,RoutedEventArgs e){if(!initialized||preview)return;Save("AutoTranslate",Automatic.IsChecked==true?1:0);if(Automatic.IsChecked==true&&!composing&&!string.IsNullOrWhiteSpace(SourceText.Text))automatic.Start();else automatic.Stop();}
     private async void SourceChanged(object sender,TextChangedEventArgs e){if(!initialized)return;await InvalidateTranslation();if(Automatic.IsChecked==true&&!composing)automatic.Start();}
     private async Task InvalidateTranslation(){
         ++generation;translation?.Cancel();OutputText.Clear();CopyButton.IsEnabled=false;Status.Text="";
+        if(preview)return;
         try{await service.Send(Operation.Cancel);}catch(Exception){/* Preserve source and show a concrete error on the next request. */}
     }
     private async Task Translate(){
@@ -113,7 +115,7 @@ public partial class MainWindow : Window {
         }
     }
     private async void OnClosing(object? sender,CancelEventArgs e){
-        if(closing)return;
+        if(closing||preview)return;
         if(download is not null){download.Cancel();}
         closing=true;automatic.Stop();translation?.Cancel();
         try{await service.Send(Operation.Close);}catch(Exception){/* Process exit clears its session at the broker's expiry. */}

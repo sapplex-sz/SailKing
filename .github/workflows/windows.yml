@@ -75,7 +75,8 @@ jobs:
         shell: pwsh
         run: |
           $exe = "$env:ProgramFiles/SailKing/SailKing.exe"
-          $p = Start-Process $exe -ArgumentList "--render-preview `"$pwd/build/windows/windows-workspace-preview.png`"" -Wait -PassThru
+          $p = Start-Process $exe -ArgumentList "--render-preview `"$pwd/build/windows/windows-workspace-preview.png`"" -PassThru
+          if (!$p.WaitForExit(30000)) { throw 'WPF preview did not exit within 30 seconds' }
           if ($p.ExitCode -ne 0 -or !(Test-Path 'build/windows/windows-workspace-preview.png')) { throw 'WPF render failed' }
       - name: Uninstall without deleting user dictionaries or models
         shell: pwsh
