@@ -240,7 +240,7 @@ class Tip final:public ITfTextInputProcessorEx,public ITfKeyEventSink,public ITf
     }
 public:
     Tip(){++liveObjects;GUID id;CoCreateGuid(&id);memcpy(identity.session.data(),&id,16);}
-    ~Tip(){if(window)DestroyWindow(window);if(font)DeleteObject(font);--liveObjects;}
+    ~Tip(){if(window)DestroyWindow(window);if(font)DeleteObject(font);UnregisterClassW(L"SailKing.Candidates",module);--liveObjects;}
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid,void** out)override{
         if(!out)return E_POINTER;*out=nullptr;
         if(iid==IID_IUnknown||iid==IID_ITfTextInputProcessor||iid==IID_ITfTextInputProcessorEx)*out=static_cast<ITfTextInputProcessorEx*>(this);
@@ -269,7 +269,8 @@ public:
     HRESULT STDMETHODCALLTYPE Deactivate()override{
         cancelContext();Request r=identity;r.operation=Operation::close;Response ignored;exchange(r,ignored);
         if(manager){ComPtr<ITfKeystrokeMgr> keys;if(SUCCEEDED(manager.As(&keys)))keys->UnadviseKeyEventSink(client);ComPtr<ITfSource> source;if(SUCCEEDED(manager.As(&source))){if(managerCookie!=TF_INVALID_COOKIE)source->UnadviseSink(managerCookie);if(focusCookie!=TF_INVALID_COOKIE)source->UnadviseSink(focusCookie);}}
-        managerCookie=focusCookie=TF_INVALID_COOKIE;manager.Reset();client=TF_CLIENTID_NULL;return S_OK;
+        managerCookie=focusCookie=TF_INVALID_COOKIE;manager.Reset();client=TF_CLIENTID_NULL;
+        if(window){DestroyWindow(window);window=nullptr;}if(font){DeleteObject(font);font=nullptr;}return S_OK;
     }
     HRESULT STDMETHODCALLTYPE OnSetFocus(BOOL foreground)override{if(!foreground)cancelContext();return S_OK;}
     HRESULT STDMETHODCALLTYPE OnTestKeyDown(ITfContext* ctx,WPARAM key,LPARAM flags,BOOL* eaten)override{if(!eaten)return E_POINTER;*eaten=wants(ctx,key,flags);return S_OK;}
@@ -346,3 +347,11 @@ STDAPI DllGetClassObject(REFCLSID clsid,REFIID iid,void** out){if(clsid!=tipClsi
 STDAPI DllCanUnloadNow(){return liveObjects==0?S_OK:S_FALSE;}
 STDAPI DllRegisterServer(){try{return registration(true);}catch(...){return E_FAIL;}}
 STDAPI DllUnregisterServer(){try{return registration(false);}catch(...){return E_FAIL;}}
+extern "C" BOOL WINAPI SailKingIsActive(){
+    HRESULT initialized=CoInitializeEx(nullptr,COINIT_APARTMENTTHREADED);
+    ComPtr<ITfInputProcessorProfileMgr> profiles;TF_INPUTPROCESSORPROFILE active{};BOOL result=FALSE;
+    if(SUCCEEDED(CoCreateInstance(CLSID_TF_InputProcessorProfiles,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&profiles)))&&
+       profiles->GetActiveProfile(GUID_TFCAT_TIP_KEYBOARD,&active)==S_OK)
+        result=active.dwProfileType==TF_PROFILETYPE_INPUTPROCESSOR&&active.clsid==tipClsid&&active.guidProfile==profileGuid;
+    profiles.Reset();if(SUCCEEDED(initialized))CoUninitialize();return result;
+}

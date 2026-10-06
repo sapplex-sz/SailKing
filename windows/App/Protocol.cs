@@ -3,11 +3,21 @@ using System.IO.Pipes;
 using System.Security.Principal;
 using System.Diagnostics;
 using System.Text;
+using System.Runtime.InteropServices;
 namespace SailKing;
 internal enum Operation : uint {Status,Key,Select,Reset,Close,ToggleEnglish,ToggleTranslation,TranslateText,Cancel,CommitOriginal}
 internal enum Job : uint {Idle,Running,Ready,Failed}
 internal record Reply(bool Available,bool Handled,bool English,bool Translation,Job Job,string Preedit,string Draft,string Commit,string Result,string Error,string[] Candidates);
 internal sealed class InputService : IDisposable {
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)] private delegate int ActiveProfile();
+    public static bool IsActive() {
+        IntPtr library=IntPtr.Zero;
+        try {
+            library=NativeLibrary.Load(Path.Combine(AppContext.BaseDirectory,"native","0.4.0-preview.1","x64","SailKingTip.dll"));
+            return Marshal.GetDelegateForFunctionPointer<ActiveProfile>(NativeLibrary.GetExport(library,"SailKingIsActive"))()!=0;
+        }catch(Exception){return false;}
+        finally{if(library!=IntPtr.Zero)NativeLibrary.Free(library);}
+    }
     private const uint Magic=0x534B494D;
     private readonly Guid session=Guid.NewGuid();
     private readonly SemaphoreSlim serial=new(1,1);

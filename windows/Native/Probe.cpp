@@ -62,6 +62,15 @@ int wmain(int argc,wchar_t** argv){
         if(SUCCEEDED(hr))hr=CoCreateInstance(CLSID_TF_ThreadMgr,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&manager));
         if(SUCCEEDED(hr))hr=manager->Activate(&id);
         if(SUCCEEDED(hr)){hr=tip->ActivateEx(manager.Get(),id,0);if(SUCCEEDED(hr))tip->Deactivate();manager->Deactivate();}
+        if(SUCCEEDED(hr)){
+            auto dll=sailking::executableDirectory()/L"SailKingTip.dll";
+            if(!std::filesystem::exists(dll))dll=sailking::executableDirectory()/L"native"/L"0.4.0-preview.1"/L"x64"/L"SailKingTip.dll";
+            HMODULE library=LoadLibraryExW(dll.c_str(),nullptr,LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR|LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+            using ActiveProfile=BOOL(WINAPI*)();
+            auto active=library?reinterpret_cast<ActiveProfile>(GetProcAddress(library,"SailKingIsActive")):nullptr;
+            if(!active)hr=E_FAIL;else (void)active();
+            if(library)FreeLibrary(library);
+        }
         std::cout<<"{\"comActivation\":"<<(SUCCEEDED(hr)?"true":"false")<<",\"hresult\":"<<static_cast<long>(hr)<<"}\n";
     }else{
         BOOL enabled=FALSE;hr=profiles->IsEnabledLanguageProfile(tipClsid,inputLanguage,profileGuid,&enabled);

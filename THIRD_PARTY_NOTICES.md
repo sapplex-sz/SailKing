@@ -9,3 +9,5 @@ The root MIT license applies to SailKing's original application, UI, bridge, and
 - **SailKing captain-whale artwork**: Generated artwork and the prompts are included in `Resources/Branding/`. The code license does not grant trademark rights or imply ownership of unrelated characters, logos or upstream brands. Distribution does not imply upstream endorsement.
 
 The Mac app includes runtime license files. Its input-method component includes both the Rime notices and editable dictionary sources. Third-party source archive downloads and local generated dictionary indexes are excluded from Git; reproduce them with `scripts/fetch-rime.sh`.
+
+The Windows preview additionally bundles the MSVC x64 librime distribution, app-local Microsoft Visual C++ runtime files, and the self-contained .NET 10 WPF runtime. These Microsoft runtime components retain their own licenses and notices; they are not relicensed under the project's MIT license. The installer contains editable Rime data, its upstream license files, the Hy-MT2 license, and the runtime notices. Windows TSF reference sources and pinned dependency hashes are described in [windows/UPSTREAM.md](windows/UPSTREAM.md).

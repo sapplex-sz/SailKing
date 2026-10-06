@@ -27,7 +27,7 @@ public partial class MainWindow : Window {
         TextCompositionManager.AddPreviewTextInputStartHandler(SourceText,(_,_)=>{composing=true;automatic.Stop();});
         TextCompositionManager.AddPreviewTextInputHandler(SourceText,(_,_)=>{composing=false;if(Automatic.IsChecked==true)automatic.Start();});
         TextCompositionManager.AddPreviewTextInputHandler(PracticeText,(_,e)=>{
-            if(e.Text=="你好"&&registered&&enabled){practiced=true;PracticeStatus.Text="已完成拼音试打";FinishGuide.IsEnabled=true;}
+            if(e.Text=="你好"&&registered&&enabled&&InputService.IsActive()){practiced=true;PracticeStatus.Text="已完成拼音试打";FinishGuide.IsEnabled=true;}
         });
         AddPhrases();initialized=true;ShowPage(openSettings?"Settings":GetNumber("Onboarded")==0?"Guide":"Workspace");UpdateModelStatus();
     }

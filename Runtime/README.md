@@ -12,3 +12,7 @@
 - 模型配置后台只支持当前 `hymt2-gguf` 运行时。更换不同架构的模型需要先增加对应原生运行时，不能仅改模型名称。
 
 许可证在 `Resources/Licenses/`，一并打包进App。官方上游：[Hy-MT2](https://huggingface.co/tencent/Hy-MT2-1.8B)、[llama.cpp STQ PR](https://github.com/ggml-org/llama.cpp/pull/22836)。
+
+## Windows runtime
+
+Windows builds the same C ABI as `CHaHaRuntime.dll` against the pinned llama.cpp source. The platform-specific thread-count query is guarded so the Mac implementation is unchanged. The Windows preview uses the Hy-MT2 Q4 model and a baseline x64 CPU backend; it does not apply the ARM-only legacy STQ model mapping. No external inference server is needed. Build and dependency verification are managed by `windows/scripts/build.ps1`.
