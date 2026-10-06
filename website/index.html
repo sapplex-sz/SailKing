@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071d30">
+  <title>出海王输入法 · SailKing — 输入中文，连接世界</title>
+  <meta name="description" content="出海王 SailKing：中文拼音、英文直输与本机翻译，在当前输入框核对译文并确认上屏。查看 Mac 和 Windows 版本、下载安装包与使用指南。">
+  <link rel="canonical" href="https://sailking.157-137-190-198.sslip.io/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="出海王输入法 · SailKing">
+  <meta property="og:description" content="用中文输入，和世界聊聊。原生输入法 · 本机翻译 · 开源。">
+  <meta property="og:url" content="https://sailking.157-137-190-198.sslip.io/">
+  <meta property="og:image" content="https://sailking.157-137-190-198.sslip.io/assets/logo.png">
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+  <header class="header">
+    <div class="wrap nav">
+      <a class="brand" href="#" aria-label="出海王输入法首页">
+        <img src="assets/logo.png" width="42" height="42" alt="船长鲸 Logo">
+        <span>出海王<span class="brand-en">SailKing</span></span>
+      </a>
+      <nav aria-label="主导航">
+        <a href="#how">使用方法</a>
+        <a href="https://github.com/sapplex-sz/SailKing">GitHub <span aria-hidden="true">↗</span></a>
+        <a class="nav-download" href="#download">下载</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="tiny-wave" aria-hidden="true">≈</span> 出海王输入法 · SailKing</p>
+          <h1>用中文输入，<br>和世界<span class="gold">聊聊。</span></h1>
+          <p class="hero-description">从拼音到译文，在当前输入框完成。<br>核对、确认，再让你的话跨越语言。</p>
+          <div class="hero-actions">
+            <a class="button button-gold" href="#download">获取输入法 <span aria-hidden="true">↓</span></a>
+            <a class="text-link" href="#how">看看怎么用 <span aria-hidden="true">→</span></a>
+          </div>
+          <p class="hero-status">Windows 预览版可下载 · Mac 正式包准备中</p>
+          <ul class="hero-points" aria-label="产品特点"><li>一个输入源</li><li>本机翻译</li><li>MIT 开源</li></ul>
+        </div>
+        <div class="hero-visual">
+          <div class="visual-heading"><span class="live-dot" aria-hidden="true"></span> 为跨语言沟通而生 <span>01 / WORKSPACE</span></div>
+          <button class="screenshot-button main-screen" type="button" data-image="assets/workspace.png" data-caption="Mac 实际运行截图 · Apple 内置引擎完成物流通知中译英" aria-label="放大 Mac 翻译工作台截图">
+            <img src="assets/workspace.png" width="2320" height="1580" alt="Mac 翻译工作台中，中文物流通知已译为英文" fetchpriority="high">
+          </button>
+          <div class="candidate-preview">
+            <img src="assets/candidate.png" width="720" height="236" alt="候选窗组件预览，展示 hao 拼音与中文候选">
+            <p>紧凑候选窗 · 可拖动并记住位置<span>组件预览</span></p>
+          </div>
+          <p class="screen-caption">Mac 实际运行截图 · Apple 内置翻译</p>
+        </div>
+      </div>
+      <div class="hero-bottom wrap"><span>中文拼音 / 英文直输 / 翻译输入</span><span>让沟通顺着你的思路走 <span aria-hidden="true">↘</span></span></div>
+    </section>
+
+    <section class="features wrap section" aria-labelledby="features-title">
+      <div class="section-intro"><p class="eyebrow dark">输入与翻译，一起完成</p><h2 id="features-title">熟悉的输入，多一种可能。</h2></div>
+      <div class="feature-row">
+        <article><span class="feature-number">01</span><h3>中文、英文，一键切换</h3><p>Rime 驱动拼音选词，轻按 Shift 直输英文。系统键盘中只需一个出海王输入源。</p></article>
+        <article><span class="feature-number">02</span><h3>译文由你确认</h3><p>在输入框中生成译文预览，核对后再上屏。消息是否发送，始终由你决定。</p></article>
+        <article><span class="feature-number">03</span><h3>翻译留在本机</h3><p>使用本地模型；Mac 另可选 Apple 设备端翻译。无需翻译 API Key，普通打字无需模型。</p></article>
+      </div>
+    </section>
+
+    <section class="product-section section" aria-labelledby="product-title">
+      <div class="wrap product-grid">
+        <div class="product-copy"><p class="eyebrow dark">输入框之外，也有工作台</p><h2 id="product-title">处理一段文案，<br>或者一句回复。</h2><p>独立工作台支持语言选择、译文复制和业务常用表达。客户沟通、商品介绍、社媒互动，都可以从一句熟悉的话开始。</p>
+          <div class="platform-switch" role="group" aria-label="查看平台界面">
+            <button type="button" data-platform="mac" aria-pressed="true">Mac</button><button type="button" data-platform="windows" aria-pressed="false">Windows</button>
+          </div>
+          <p class="platform-caption" id="platform-caption">Mac 实际运行截图 · App 自带常用表达</p>
+        </div>
+        <button class="screenshot-button product-screen" id="platform-screen" type="button" data-image="assets/phrases.png" data-caption="Mac 实际运行截图 · App 自带常用表达" aria-label="放大平台界面截图">
+          <img id="platform-image" src="assets/phrases.png" width="2320" height="1580" alt="Mac 的客户沟通常用表达界面" loading="lazy">
+        </button>
+      </div>
+    </section>
+
+    <section class="wrap section download-section" id="download" aria-labelledby="download-title">
+      <div class="section-intro"><p class="eyebrow dark">开始使用出海王</p><h2 id="download-title">选一个平台，启程。</h2><p>安装包由我们的服务器直接提供。</p></div>
+      <div class="download-grid">
+        <article class="download-card available">
+          <div class="download-card-head"><h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3.5 10.5 2v9H2zm10-1.7L22 0v11H12zM2 13h8.5v9L2 20.5zm10 0h10v11l-10-1.8z"/></svg>Windows</h3><span class="badge">预览版</span></div>
+          <p class="version">0.4.0-preview.1 <span>· 63.8 MB</span></p>
+          <p class="requirement">目标 Windows 10 2004+ / Windows 11 · x64</p>
+          <a class="button button-navy download-button" href="downloads/SailKing-0.4.0-preview.1-Windows-x64.exe" download>下载 Windows 安装包 <span aria-hidden="true">↓</span></a>
+          <p class="release-note">预览包未签名。已完成 Server 2025 安装与本地翻译检查；Windows 10/11 实机、聊天软件试打仍待验收。测试设备短句首次翻译约 80 秒。</p>
+          <div class="download-links"><a href="https://github.com/sapplex-sz/SailKing/blob/main/docs/WINDOWS.md">安装与验证记录 <span aria-hidden="true">↗</span></a><a href="downloads/SHA256SUMS.txt">校验清单</a></div>
+          <details class="checksum"><summary>查看 SHA-256</summary><code id="installer-hash">29a7a4091cdfac623d35920f6e6f5380d2944ffa3040c34a58199d62a532e621</code><button class="copy-hash" type="button">复制校验值</button><span role="status" id="copy-status"></span></details>
+        </article>
+        <article class="download-card mac-card">
+          <div class="download-card-head"><h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.4 4.2c.8-1 .8-2.1.8-2.5-1 .1-2 .7-2.7 1.5-.6.7-1.1 1.7-1 2.6 1.1.1 2.1-.5 2.9-1.6M20 17.2c-.5 1.1-.8 1.6-1.5 2.6-.9 1.2-2.1 2.7-3.5 2.7-1.2 0-1.5-.8-3.1-.8s-1.9.8-3.1.8c-1.4.1-2.6-1.3-3.5-2.5-2.5-3.5-2.8-7.6-1.2-9.8 1.1-1.6 2.8-2.4 4.3-2.4 1.4 0 2.2.8 3.4.8s1.8-.8 3.4-.8c1.3 0 2.7.7 3.7 1.9-3.3 1.8-2.7 6.2.6 7.5z"/></svg>Mac</h3><span class="badge badge-muted">准备中</span></div>
+          <p class="version">0.3.6 <span>· Build 9</span></p>
+          <p class="requirement">macOS 26 及以上 · Apple Silicon</p>
+          <div class="unavailable">正式安装包准备中</div>
+          <p class="release-note">正在等待 Developer ID 签名与 Apple 公证，尚未公开提供 DMG。可以查看安装指南和源码构建说明。</p>
+          <div class="download-links"><a href="https://github.com/sapplex-sz/SailKing/blob/main/docs/INSTALLATION.md">Mac 安装指南 <span aria-hidden="true">↗</span></a><a href="https://github.com/sapplex-sz/SailKing#开发与贡献">源码构建</a></div>
+        </article>
+      </div>
+      <p class="download-footnote">首次模型或语言包下载需要联网，准备完成后在本机翻译。可用语言组合取决于引擎和语言包；重要内容请核对译文。</p>
+    </section>
+
+    <section class="how-section section" id="how" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="how-heading"><div><p class="eyebrow dark">三步，输入第一句</p><h2 id="how-title">从安装到“你好”。</h2></div><div class="setup-switch" role="group" aria-label="选择安装指南平台"><button type="button" data-setup="windows" aria-pressed="true">Windows</button><button type="button" data-setup="mac" aria-pressed="false">Mac</button></div></div>
+        <ol class="steps" id="windows-steps">
+          <li><span class="step-number">1</span><h3>安装</h3><p>运行 EXE 安装包，按系统提示授予管理员权限。安装包已包含所需运行组件。</p></li>
+          <li><span class="step-number">2</span><h3>启用</h3><p>打开出海王，在“新手设置”中启用输入法。按 <kbd>Win</kbd> + <kbd>Space</kbd> 选择出海王。</p></li>
+          <li><span class="step-number">3</span><h3>试打</h3><p>输入 <code>nihao</code>，按空格选出“你好”。需要翻译时，再到设置下载本地模型。</p></li>
+        </ol>
+        <ol class="steps" id="mac-steps" hidden>
+          <li><span class="step-number">1</span><h3>安装组件</h3><p>正式包发布后，将 App 拖到“应用程序”。打开 App，在新手设置中安装自带的输入法组件。</p></li>
+          <li><span class="step-number">2</span><h3>加入键盘</h3><p>系统设置 → 键盘 → 文字输入 → 编辑 → ＋ → 简体中文，添加“出海王输入法”。</p></li>
+          <li><span class="step-number">3</span><h3>切换并试打</h3><p>在菜单栏选择出海王，输入 <code>nihao</code> 并按空格选词。按需准备本地模型或 Apple 语言包。</p></li>
+        </ol>
+        <div class="translate-steps"><span>翻译输入</span><p><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> 开启 <span aria-hidden="true">→</span> 输入并选词 <span aria-hidden="true">→</span> <kbd>Enter</kbd> 预览 <span aria-hidden="true">→</span> 再次 <kbd>Enter</kbd> 上屏</p></div>
+      </div>
+    </section>
+
+    <section class="wrap section faq-section" aria-labelledby="faq-title">
+      <div class="faq-intro"><p class="eyebrow dark">还有这些，你可能想知道</p><h2 id="faq-title">常见问题</h2><a class="text-link dark-link" href="https://github.com/sapplex-sz/SailKing/issues">反馈问题 <span aria-hidden="true">↗</span></a></div>
+      <div class="faq-list">
+        <details><summary>装好 App 就能直接使用输入法吗？</summary><p>还需完成新手设置。Windows 安装器注册组件，再在 App 中启用并切换；Mac 需要安装 App 自带组件，并在系统键盘中添加出海王。只添加一个输入源，中英文通过 Shift 切换。</p></details>
+        <details><summary>必须下载模型才能打字吗？</summary><p>普通中文拼音和英文输入无需模型。Windows 翻译采用约 1.13 GB 的 Hy-MT2 Q4，建议至少 8 GB 内存；Mac 可选 Apple 设备端翻译或本地模型，详见安装指南。</p></details>
+        <details><summary>输入内容会上传吗？</summary><p>原文由本机翻译引擎处理，不发送到翻译 API。工作台不保存翻译历史；拼音词库会在本机学习已确认的词语。下载模型、语言包和访问网站需要网络。<a href="https://github.com/sapplex-sz/SailKing/blob/main/PRIVACY.md">查看完整隐私说明</a>。</p></details>
+        <details><summary>如何更新或卸载？</summary><p>Windows 运行新版安装包更新；卸载可从系统“已安装的应用”中操作。Mac 更新需替换 App 并更新组件；卸载先切换其他键盘、移除系统输入源，再退出并移除组件和 App。默认保留模型、词库和偏好，完整步骤见各平台安装指南。</p></details>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="wrap footer-top"><div class="footer-brand"><img src="assets/logo.png" width="50" height="50" alt=""><div><strong>出海王输入法 · SailKing</strong><p>用熟悉的语言，连接更大的世界。</p></div></div><button class="coffee-button" id="support-open" type="button">请开发者喝杯咖啡 <span aria-hidden="true">↗</span></button></div>
+      <div class="wrap footer-bottom"><span>开源 · MIT License</span><div><a href="https://github.com/sapplex-sz/SailKing">源码</a><a href="https://github.com/sapplex-sz/SailKing/blob/main/PRIVACY.md">隐私说明</a><a href="https://github.com/sapplex-sz/SailKing/releases">更新记录</a></div></div>
+    </footer>
+  </main>
+  <dialog class="image-dialog" id="image-dialog" aria-label="截图放大预览"><button class="dialog-close" type="button" aria-label="关闭截图">×</button><img id="dialog-image" alt=""><p id="dialog-caption"></p></dialog>
+  <dialog class="support-dialog" id="support-dialog" aria-labelledby="support-title"><button class="dialog-close" type="button" aria-label="关闭支持开发者">×</button><p class="eyebrow dark">感谢支持</p><h2 id="support-title">请开发者喝杯咖啡</h2><p>如果出海王帮到了你，欢迎支持后续开发。</p><div class="support-grid"><figure><a href="assets/wechat-coffee.png" aria-label="查看微信赞赏码原图"><img src="assets/wechat-coffee.png" width="1152" height="1152" alt="宋鑫的微信赞赏码" loading="lazy"><figcaption>微信赞赏 · 查看原图</figcaption></a></figure><figure><a href="assets/wechat-contact.png" aria-label="查看微信联系二维码原图"><img src="assets/wechat-contact.png" width="892" height="1318" alt="创享机器人的微信联系二维码" loading="lazy"><figcaption>联系开发者 · 查看原图</figcaption></a></figure></div></dialog>
+</body>
+</html>

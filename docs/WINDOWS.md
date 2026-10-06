@@ -14,7 +14,7 @@ Windows 版使用系统 Text Services Framework（TSF），安装后在 Windows 
 
 ## 安装
 
-1. 从 [Releases](https://github.com/sapplex-sz/SailKing/releases) 获取 Windows 安装包 `SailKing-0.4.0-preview.1-Windows-x64.exe`。未公开的草稿不会出现在普通访问者的下载列表中。
+1. 从 [官网下载页](https://sailking.157-137-190-198.sslip.io/#download) 获取 Windows 安装包 `SailKing-0.4.0-preview.1-Windows-x64.exe`，也可 [直接下载](https://sailking.157-137-190-198.sslip.io/downloads/SailKing-0.4.0-preview.1-Windows-x64.exe)。网站提供 SHA-256 校验清单；[GitHub Releases](https://github.com/sapplex-sz/SailKing/releases) 保留备用下载和更新记录。未公开的草稿不会出现在普通访问者的下载列表中。
 2. 运行安装包。注册系统输入法需要管理员权限，安装位置默认为“Program Files / SailKing”。不需要另外安装 Python、Ollama 或 .NET。
 3. 打开 **出海王输入法**，在“新手设置”中点击 **启用出海王**。
 4. 按 **Win + Space** 选择出海王。在试打框输入 `nihao`，按空格选出“你好”。粘贴文字不会完成试打。

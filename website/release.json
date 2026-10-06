@@ -1,0 +1,12 @@
+{
+  "site_url": "https://sailking.157-137-190-198.sslip.io/",
+  "windows": {
+    "version": "0.4.0-preview.1",
+    "file": "SailKing-0.4.0-preview.1-Windows-x64.exe",
+    "size": 63770323,
+    "sha256": "29a7a4091cdfac623d35920f6e6f5380d2944ffa3040c34a58199d62a532e621",
+    "prerelease": true,
+    "signed": false
+  },
+  "mac": {"version": "0.3.6", "build": 9, "public_download": false}
+}

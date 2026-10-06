@@ -15,18 +15,20 @@
 ![Windows preview](https://img.shields.io/badge/Windows-x64_Preview-0078D4)
 [![Windows build](https://github.com/sapplex-sz/SailKing/actions/workflows/windows.yml/badge.svg)](https://github.com/sapplex-sz/SailKing/actions/workflows/windows.yml)
 
-[获取安装包](https://github.com/sapplex-sz/SailKing/releases) · [快速开始](#快速开始) · [功能亮点](#功能亮点) · [使用方法](#使用方法) · [反馈问题](https://github.com/sapplex-sz/SailKing/issues) · [请喝咖啡](#支持开发者)
+[官网与下载](https://sailking.157-137-190-198.sslip.io/) · [快速开始](#快速开始) · [功能亮点](#功能亮点) · [使用方法](#使用方法) · [反馈问题](https://github.com/sapplex-sz/SailKing/issues) · [请喝咖啡](#支持开发者)
 
 </div>
 
 出海王是一款原生系统输入法，也提供独立的翻译工作台。日常输入时使用中文拼音或英文直输；需要跨语言沟通时，在当前输入框完成原文、预览译文，再由你确认上屏。适合客户沟通、商品介绍、跨境业务和多语言社媒交流。
 
+**官网下载站：** [出海王 · SailKing](https://sailking.157-137-190-198.sslip.io/)。网站与安装包均由我们的甲骨文服务器提供，包含产品截图、安装步骤、版本状态和校验清单。
+
 | 平台 | 版本与范围 | 安装 |
 |---|---|---|
 | **Mac** | 0.3.6 (9) · macOS 26+ · Apple Silicon | [Mac 安装指南](docs/INSTALLATION.md)。正式 DMG 仍在等待 Developer ID 签名与 Apple 公证，尚未公开分发。 |
-| **Windows** | 0.4.0-preview.1 · 目标 Windows 10 2004+ / 11 · x64 | [Windows 安装与验证记录](docs/WINDOWS.md)。预览包未做发布者签名，兼容性以验证记录为准。 |
+| **Windows** | 0.4.0-preview.1 · 目标 Windows 10 2004+ / 11 · x64 | [下载安装包](https://sailking.157-137-190-198.sslip.io/downloads/SailKing-0.4.0-preview.1-Windows-x64.exe) · [SHA-256](https://sailking.157-137-190-198.sslip.io/downloads/SHA256SUMS.txt) · [安装与验证记录](docs/WINDOWS.md)。预览包未做发布者签名，兼容性以验证记录为准。 |
 
-安装包状态以 [Releases](https://github.com/sapplex-sz/SailKing/releases) 为准。以下详细截图与快捷键以 Mac 版为例，Windows 使用方式见单独指南。
+在 [官网下载页](https://sailking.157-137-190-198.sslip.io/#download) 查看可用安装包和平台状态；[GitHub Releases](https://github.com/sapplex-sz/SailKing/releases) 保留更新记录和 Windows 备用下载。以下详细截图与快捷键以 Mac 版为例，Windows 使用方式见单独指南。
 
 ![出海王翻译工作台：中文物流通知通过 Apple 内置翻译生成英文](docs/images/workspace.png)
 
@@ -72,13 +74,13 @@
 
 ## 快速开始
 
-Windows 用户：使用 EXE 安装包，在新手设置中启用出海王，按 **Win + Space** 切换输入法，输入 `nihao` 并用空格选词。需要翻译时再下载本地模型；无需安装 Python、Ollama 或 .NET。完整步骤、快捷键、更新和卸载见 [Windows 指南](docs/WINDOWS.md)。
+Windows 用户：从 [官网下载页](https://sailking.157-137-190-198.sslip.io/#download) 获取 EXE 安装包，在新手设置中启用出海王，按 **Win + Space** 切换输入法，输入 `nihao` 并用空格选词。需要翻译时再下载本地模型；无需安装 Python、Ollama 或 .NET。完整步骤、快捷键、更新和卸载见 [Windows 指南](docs/WINDOWS.md)。
 
 以下为 Mac 版设置步骤。
 
 ### 1. 安装 App 与输入法组件
 
-正式安装包将通过 [GitHub Releases](https://github.com/sapplex-sz/SailKing/releases) 分发。打开 DMG，把 **出海王输入法.app** 拖到“应用程序”，退出镜像后打开 App。
+正式 Mac 安装包完成签名与公证后，将在 [官网下载页](https://sailking.157-137-190-198.sslip.io/#download) 提供。打开 DMG，把 **出海王输入法.app** 拖到“应用程序”，退出镜像后打开 App。
 
 首次启动会显示新手设置，点击 **安装输入法组件**。App 已包含组件，无需单独下载安装另一个键盘。已安装的设备会显示“已安装在这台 Mac”，如下图。
 
