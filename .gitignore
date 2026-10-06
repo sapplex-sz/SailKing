@@ -32,3 +32,10 @@ docs/VALIDATION.md
 *.provisionprofile
 *.certSigningRequest
 *.csr
+
+# Windows generated builds and machine-specific dependency caches
+windows/**/bin/
+windows/**/obj/
+windows/.vs/
+windows/_deps/
+*.pdb

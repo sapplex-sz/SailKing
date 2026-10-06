@@ -1,0 +1,62 @@
+name: Windows input method
+on:
+  push:
+    branches: [main, 'codex/windows-support']
+    paths: ['windows/**', 'Runtime/src/**', 'Runtime/include/**', 'Vendor/RimeData/**', '.github/workflows/windows.yml']
+  pull_request:
+    paths: ['windows/**', 'Runtime/src/**', 'Runtime/include/**', 'Vendor/RimeData/**', '.github/workflows/windows.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/cache@v4
+        with:
+          path: ~/AppData/Local/SailKingBuildCache
+          key: windows-dependencies-rime117-llama1e411-v1
+      - name: Build native input method, app and installer
+        shell: pwsh
+        run: ./windows/scripts/build.ps1
+      - name: Install and verify both COM registrations
+        shell: pwsh
+        run: |
+          $installer = Resolve-Path 'build/windows/SailKing-0.4.0-preview.1-Windows-x64.exe'
+          $p = Start-Process $installer -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /LOG=install.log' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Installer failed: $($p.ExitCode)" }
+          $root = "$env:ProgramFiles/SailKing"
+          & "$root/SailKingProbe.exe" --profiles
+          if ($LASTEXITCODE -ne 0) { throw 'Profile registration failed' }
+          & "$root/SailKingProbe.exe" --self-test
+          if ($LASTEXITCODE -ne 0) { throw 'x64 COM activation failed' }
+          & "$root/native/0.4.0-preview.1/x86/SailKingProbe.exe" --self-test
+          if ($LASTEXITCODE -ne 0) { throw 'x86 COM activation failed' }
+      - name: Render Windows app component preview
+        shell: pwsh
+        run: |
+          $exe = "$env:ProgramFiles/SailKing/SailKing.exe"
+          $p = Start-Process $exe -ArgumentList "--render-preview `"$pwd/build/windows/windows-workspace-preview.png`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0 -or !(Test-Path 'build/windows/windows-workspace-preview.png')) { throw 'WPF render failed' }
+      - name: Uninstall without deleting user dictionaries or models
+        shell: pwsh
+        run: |
+          $p = Start-Process "$env:ProgramFiles/SailKing/unins000.exe" -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw 'Uninstall failed' }
+          if (Test-Path 'HKLM:/SOFTWARE/Classes/CLSID/{536B7ED5-A481-4931-A19E-4706E2BE6862}') { throw 'x64 COM registration remained' }
+          if (Test-Path 'HKLM:/SOFTWARE/Classes/Wow6432Node/CLSID/{536B7ED5-A481-4931-A19E-4706E2BE6862}') { throw 'x86 COM registration remained' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SailKing-Windows-preview
+          path: |
+            build/windows/SailKing-*.exe
+            build/windows/SHA256SUMS.txt
+            build/windows/windows-workspace-preview.png
+            install.log
+          if-no-files-found: ignore

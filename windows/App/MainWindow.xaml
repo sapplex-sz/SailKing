@@ -1,0 +1,47 @@
+<Window x:Class="SailKing.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="出海王输入法" Width="920" Height="620" MinWidth="820" MinHeight="540" Background="#F8FAFC" FontFamily="Microsoft YaHei UI" FontSize="13" Loaded="OnLoaded" Closing="OnClosing" PreviewKeyDown="OnKeyDown">
+ <Grid>
+  <Grid.ColumnDefinitions><ColumnDefinition Width="148"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+  <Border Background="White" BorderBrush="#E3E8EF" BorderThickness="0,0,1,0">
+   <DockPanel Margin="14,20,10,14">
+    <StackPanel DockPanel.Dock="Top" Margin="2,0,0,24"><Image Source="Logo.png" Width="48" Height="48" HorizontalAlignment="Left"/><TextBlock Text="出海王" FontSize="20" FontWeight="SemiBold" Margin="0,10,0,0"/><TextBlock Text="SailKing" Foreground="{StaticResource Muted}" Margin="0,2,0,0"/></StackPanel>
+    <TextBlock DockPanel.Dock="Bottom" Text="0.4.0 Preview" Foreground="{StaticResource Muted}" FontSize="11"/>
+    <StackPanel>
+     <Button Content="翻译工作台" Tag="Workspace" Click="Navigate" Margin="0,0,0,8"/>
+     <Button Content="常用表达" Tag="Phrases" Click="Navigate" Margin="0,0,0,8"/>
+     <Button Content="设置" Tag="Settings" Click="Navigate" Margin="0,0,0,8"/>
+     <Button Content="新手设置" Tag="Guide" Click="Navigate" Margin="0,0,0,8"/>
+    </StackPanel>
+   </DockPanel>
+  </Border>
+  <Grid Grid.Column="1" Margin="24,22,24,18">
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <DockPanel Margin="0,0,0,16"><TextBlock x:Name="PageTitle" Text="翻译工作台" FontSize="23" FontWeight="SemiBold"/><TextBlock x:Name="EngineLabel" Text="本地 Hy-MT2" Foreground="{StaticResource Muted}" HorizontalAlignment="Right" VerticalAlignment="Center"/></DockPanel>
+   <Grid x:Name="Workspace" Grid.Row="1">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <DockPanel Margin="0,0,0,12"><StackPanel Orientation="Horizontal" DockPanel.Dock="Left"><ComboBox x:Name="SourceLanguage" DisplayMemberPath="Name" SelectionChanged="LanguageChanged"/><TextBlock Text="→" VerticalAlignment="Center" Margin="0,0,12,0"/><ComboBox x:Name="TargetLanguage" DisplayMemberPath="Name" SelectionChanged="LanguageChanged"/></StackPanel><CheckBox x:Name="Automatic" Content="自动翻译" Checked="AutomaticChanged" Unchecked="AutomaticChanged" VerticalAlignment="Center" HorizontalAlignment="Right"/></DockPanel>
+    <Grid Grid.Row="1">
+     <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="14"/><ColumnDefinition/></Grid.ColumnDefinitions>
+     <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions><TextBlock Text="原文" Foreground="{StaticResource Muted}" Margin="0,0,0,8"/><TextBox x:Name="SourceText" Grid.Row="1" AcceptsReturn="True" TextWrapping="Wrap" TextChanged="SourceChanged" MaxLength="4095"/></Grid>
+     <Grid Grid.Column="2"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions><TextBlock Text="译文" Foreground="{StaticResource Muted}" Margin="0,0,0,8"/><TextBox x:Name="OutputText" Grid.Row="1" AcceptsReturn="True" TextWrapping="Wrap" IsReadOnly="True" Background="White"/></Grid>
+    </Grid>
+    <DockPanel Grid.Row="2" Margin="0,12,0,0"><StackPanel Orientation="Horizontal"><Button x:Name="TranslateButton" Content="翻译" Click="TranslateClicked" Background="#176BBC" Foreground="White"/><Button Content="取消" Click="CancelClicked"/><Button Content="清空" Click="ClearClicked"/></StackPanel><Button x:Name="CopyButton" Content="复制译文" Click="CopyClicked" HorizontalAlignment="Right" IsEnabled="False" Margin="0"/></DockPanel>
+   </Grid>
+   <ScrollViewer x:Name="Settings" Grid.Row="1" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+    <StackPanel>
+     <Border Background="White" BorderBrush="#E3E8EF" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,12"><StackPanel><DockPanel><TextBlock Text="系统输入法" FontSize="16" FontWeight="SemiBold"/><TextBlock x:Name="InputStatus" Text="检查中…" HorizontalAlignment="Right" Foreground="{StaticResource Muted}"/></DockPanel><StackPanel Orientation="Horizontal" Margin="0,14,0,0"><Button Content="启用输入法" Click="EnableClicked"/><Button Content="打开键盘设置" Click="KeyboardSettingsClicked"/><Button Content="重新检测" Click="RefreshClicked"/></StackPanel><CheckBox x:Name="TranslationMode" Content="翻译输入（Ctrl + Shift + T）" Margin="0,14,0,0" Checked="TranslationModeChanged" Unchecked="TranslationModeChanged"/><Button Content="候选窗口跟随光标" Click="FollowClicked" HorizontalAlignment="Left" Margin="0,14,0,0"/></StackPanel></Border>
+     <Border Background="White" BorderBrush="#E3E8EF" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,12"><StackPanel><DockPanel><TextBlock Text="本地翻译模型" FontSize="16" FontWeight="SemiBold"/><TextBlock x:Name="ModelStatus" Foreground="{StaticResource Muted}" HorizontalAlignment="Right"/></DockPanel><TextBlock Text="Hy-MT2 1.8B · Q4 · 1.13 GB" Margin="0,8,0,0"/><ProgressBar x:Name="DownloadProgress" Height="4" Margin="0,12,0,12" Visibility="Collapsed"/><StackPanel Orientation="Horizontal" Margin="0,12,0,0"><Button x:Name="DownloadButton" Content="下载模型" Click="DownloadClicked"/><Button x:Name="CancelDownloadButton" Content="取消下载" Click="CancelDownloadClicked" IsEnabled="False"/></StackPanel></StackPanel></Border>
+     <Border Background="White" BorderBrush="#E3E8EF" BorderThickness="1" CornerRadius="8" Padding="18"><StackPanel><TextBlock Text="应用" FontSize="16" FontWeight="SemiBold"/><StackPanel Orientation="Horizontal" Margin="0,14,0,0"><Button Content="使用指南" Click="HelpClicked"/><Button Content="检查新版本" Click="ReleaseClicked"/><Button Content="卸载" Click="UninstallClicked"/></StackPanel></StackPanel></Border>
+    </StackPanel>
+   </ScrollViewer>
+   <ScrollViewer x:Name="Phrases" Grid.Row="1" Visibility="Collapsed"><StackPanel x:Name="PhraseItems"/></ScrollViewer>
+   <Grid x:Name="Guide" Grid.Row="1" Visibility="Collapsed">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Border Background="White" CornerRadius="8" BorderBrush="#E3E8EF" BorderThickness="1" Padding="18" Margin="0,0,0,12"><StackPanel><TextBlock Text="1  启用输入法" FontSize="16" FontWeight="SemiBold"/><TextBlock x:Name="GuideStatus" Margin="0,8,0,12"/><StackPanel Orientation="Horizontal"><Button Content="启用出海王" Click="EnableClicked"/><Button Content="打开键盘设置" Click="KeyboardSettingsClicked"/></StackPanel></StackPanel></Border>
+    <Border Grid.Row="1" Background="White" CornerRadius="8" BorderBrush="#E3E8EF" BorderThickness="1" Padding="18" Margin="0,0,0,12"><StackPanel><TextBlock Text="2  切换并试打" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="Win + Space 选择出海王，输入 nihao，再按空格选词。" Margin="0,8,0,12" TextWrapping="Wrap"/><TextBox x:Name="PracticeText" Height="48" FontSize="18"/><TextBlock x:Name="PracticeStatus" Text="等待输入“你好”" Foreground="{StaticResource Muted}" Margin="0,8,0,0"/></StackPanel></Border>
+    <StackPanel Grid.Row="2"><TextBlock Text="3  按需开启本地翻译" FontSize="16" FontWeight="SemiBold" Margin="0,6,0,8"/><TextBlock Text="拼音和英文无需下载模型。需要翻译时，在设置中下载模型。" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/><TextBlock Text="Shift 切换中英文 · Ctrl + Shift + T 开启翻译" Foreground="{StaticResource Muted}" Margin="0,10,0,0"/></StackPanel>
+    <Button x:Name="FinishGuide" Grid.Row="3" Content="完成设置" Click="FinishClicked" HorizontalAlignment="Right" IsEnabled="False" Background="#176BBC" Foreground="White" Margin="0"/>
+   </Grid>
+   <TextBlock x:Name="Status" Grid.Row="2" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,14,0,0" MinHeight="18"/>
+  </Grid>
+ </Grid>
+</Window>

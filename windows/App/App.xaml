@@ -1,0 +1,9 @@
+<Application x:Class="SailKing.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Startup="OnStartup" Exit="OnExit">
+ <Application.Resources>
+  <SolidColorBrush x:Key="Ink" Color="#202B39"/><SolidColorBrush x:Key="Muted" Color="#778394"/><SolidColorBrush x:Key="Accent" Color="#176BBC"/>
+  <Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Ink}"/></Style>
+  <Style TargetType="Button"><Setter Property="Padding" Value="14,8"/><Setter Property="Margin" Value="0,0,8,0"/><Setter Property="Background" Value="White"/><Setter Property="BorderBrush" Value="#DCE2EA"/><Setter Property="Cursor" Value="Hand"/></Style>
+  <Style TargetType="ComboBox"><Setter Property="Padding" Value="8,5"/><Setter Property="MinWidth" Value="120"/><Setter Property="Margin" Value="0,0,8,0"/></Style>
+  <Style TargetType="TextBox"><Setter Property="Padding" Value="12"/><Setter Property="BorderBrush" Value="#DCE2EA"/><Setter Property="FontSize" Value="15"/><Setter Property="VerticalScrollBarVisibility" Value="Auto"/></Style>
+ </Application.Resources>
+</Application>

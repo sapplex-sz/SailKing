@@ -12,7 +12,9 @@
 #include <string>
 #include <thread>
 #include <vector>
+#ifdef __APPLE__
 #include <sys/sysctl.h>
+#endif
 
 using Clock = std::chrono::steady_clock;
 struct haha_cancellation { std::atomic<bool> requested{false}; };
@@ -41,10 +43,12 @@ int fail(int code, const char * message, char ** error) {
     return code;
 }
 int threads() {
-    int n = 0;
+    int n = static_cast<int>(std::thread::hardware_concurrency());
+#ifdef __APPLE__
     size_t len = sizeof(n);
     if (sysctlbyname("hw.perflevel0.physicalcpu", &n, &len, nullptr, 0) != 0 || n < 1)
         n = static_cast<int>(std::thread::hardware_concurrency());
+#endif
     return std::clamp(n, 1, 8);
 }
 std::vector<llama_token> tokenize(const llama_vocab * vocab, const std::string & text, bool special) {
@@ -111,7 +115,11 @@ void haha_cancellation_request(haha_cancellation * c) { if (c) c->requested.stor
 void haha_cancellation_destroy(haha_cancellation * c) { delete c; }
 void haha_string_free(char * s) { std::free(s); }
 const char * haha_runtime_version(void) {
+#ifdef _WIN32
+    return "llama.cpp 1e411d8f5a1e23525fa3265dfb4bd76265465397; Windows x64 CPU; Hy-MT2 Q4; context 4096";
+#else
     return "llama.cpp STQ 1e411d8f5a1e23525fa3265dfb4bd76265465397 + legacy stride16 mapping; CPU ARM NEON; context 4096";
+#endif
 }
 
 int32_t haha_engine_translate(haha_engine * engine, const char * model_path,
@@ -131,7 +139,7 @@ int32_t haha_engine_translate(haha_engine * engine, const char * model_path,
         if (!engine->model || engine->path != model_path) {
             haha_engine_unload(engine);
             auto mp = llama_model_default_params();
-            mp.n_gpu_layers = 0; // STQ1_0 is an ARM NEON CPU kernel.
+            mp.n_gpu_layers = 0; // Both platforms use the CPU backend.
             mp.progress_callback = load_progress;
             mp.progress_callback_user_data = cancellation;
             engine->model = llama_model_load_from_file(model_path, mp);
