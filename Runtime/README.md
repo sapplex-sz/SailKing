@@ -15,4 +15,4 @@
 
 ## Windows runtime
 
-Windows builds the same C ABI as `CHaHaRuntime.dll` against the pinned llama.cpp source. The platform-specific thread-count query is guarded so the Mac implementation is unchanged. The Windows preview uses the Hy-MT2 Q4 model and a baseline x64 CPU backend; it does not apply the ARM-only legacy STQ model mapping. No external inference server is needed. Build and dependency verification are managed by `windows/scripts/build.ps1`.
+Windows builds the same C ABI as `CHaHaRuntime.dll` against the pinned llama.cpp source. The platform-specific thread-count query is guarded so the Mac implementation is unchanged. The Windows preview uses the Hy-MT2 Q4 model; it does not apply the ARM-only legacy STQ model mapping. The broker selects the optimized AVX2 runtime only when Windows and the CPU support all required instructions, with a baseline x64 runtime as fallback. Both variants are packaged and checked independently. Ordinary Pinyin does not load the model or inference runtime. No external inference server is needed. Build and dependency verification are managed by `windows/scripts/build.ps1`.

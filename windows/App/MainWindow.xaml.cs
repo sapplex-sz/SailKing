@@ -125,7 +125,7 @@ public partial class MainWindow : Window {
         Dispatcher.BeginInvoke(async()=>{
             ShowPage("Workspace");Automatic.IsChecked=false;SourceText.Text="您好，您的订单 AB-123 已发货，请留意物流更新。";
             await InvalidateTranslation();OutputText.Text="Hello, your order AB-123 has shipped. Please keep an eye on the tracking updates.";CopyButton.IsEnabled=true;Status.Text="界面预览 · 示例译文";
-            UpdateLayout();var bitmap=new RenderTargetBitmap((int)ActualWidth,(int)ActualHeight,96,96,System.Windows.Media.PixelFormats.Pbgra32);bitmap.Render(this);
+            UpdateLayout();var content=(FrameworkElement)Content;var bitmap=new RenderTargetBitmap((int)Math.Ceiling(content.ActualWidth),(int)Math.Ceiling(content.ActualHeight),96,96,System.Windows.Media.PixelFormats.Pbgra32);bitmap.Render(content);
             var png=new PngBitmapEncoder();png.Frames.Add(BitmapFrame.Create(bitmap));using(var stream=File.Create(path))png.Save(stream);Close();
         },DispatcherPriority.ApplicationIdle);
     }
