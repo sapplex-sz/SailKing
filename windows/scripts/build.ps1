@@ -54,11 +54,13 @@ New-Item -ItemType Directory -Force $licenses | Out-Null
 Copy-Item "$root\LICENSE","$root\THIRD_PARTY_NOTICES.md" $licenses
 Copy-Item "$root\Vendor\licenses" (Join-Path $licenses 'Rime') -Recurse -Force
 Copy-Item "$root\Resources\Licenses" (Join-Path $licenses 'Runtime') -Recurse -Force
+Copy-Item "$root\windows\Licenses" (Join-Path $licenses 'Microsoft') -Recurse -Force
 Copy-Item "$root\Vendor\THIRD_PARTY_NOTICES.md" (Join-Path $licenses 'Rime-NOTICES.md')
 # App-local VC runtime: no system-wide redistributable installation is required.
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-$redist = Get-ChildItem "$vs\VC\Redist\MSVC" -Directory | Sort-Object Name -Descending | Select-Object -First 1
+$redist = Get-ChildItem "$vs\VC\Redist\MSVC" -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+$' } | Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
+if (!$redist) { throw 'Versioned Visual C++ redistributable directory was not found' }
 $crt = Get-ChildItem "$($redist.FullName)\x64" -Directory -Filter '*CRT' | Select-Object -First 1
 Copy-Item "$($crt.FullName)\*.dll" $stage
 foreach ($arch in @('x64','x86')) {
