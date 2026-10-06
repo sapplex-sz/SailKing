@@ -9,6 +9,40 @@ on:
 permissions:
   contents: read
 jobs:
+  native:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        arch: [x64, Win32]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and verify native COM components
+        shell: pwsh
+        run: |
+          $build = "build/native/${{ matrix.arch }}"
+          cmake -S windows -B $build -A '${{ matrix.arch }}' -DSAILKING_BROKER=OFF
+          if ($LASTEXITCODE -ne 0) { throw 'Native configure failed' }
+          cmake --build $build --config Release --parallel 4
+          if ($LASTEXITCODE -ne 0) { throw 'Native build failed' }
+          ctest --test-dir $build -C Release --output-on-failure
+          if ($LASTEXITCODE -ne 0) { throw 'Native tests failed' }
+          $register = if ('${{ matrix.arch }}' -eq 'x64') { "$env:SystemRoot/System32/regsvr32.exe" } else { "$env:SystemRoot/SysWOW64/regsvr32.exe" }
+          $dll = (Resolve-Path "$build/Release/SailKingTip.dll").Path
+          & $register /s $dll | Out-Host
+          if ($LASTEXITCODE -ne 0) { throw 'Native registration failed' }
+          try {
+            & "$build/Release/SailKingProbe.exe" --self-test
+            if ($LASTEXITCODE -ne 0) { throw 'Native class verification failed' }
+          } finally { & $register /s /u $dll | Out-Host }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: SailKing-native-${{ matrix.arch }}
+          path: |
+            build/native/${{ matrix.arch }}/Release/SailKingTip.dll
+            build/native/${{ matrix.arch }}/Release/SailKingProbe.exe
+          if-no-files-found: ignore
   build:
     runs-on: windows-2022
     timeout-minutes: 45

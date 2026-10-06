@@ -13,6 +13,7 @@ using namespace sailking;
 namespace {
 HMODULE module=nullptr;
 std::atomic<long> liveObjects{0};
+thread_local long activatedObjects=0;
 TF_DISPLAYATTRIBUTE displayAttribute{{TF_CT_COLORREF,{RGB(25,105,190)}},{TF_CT_NONE,{0}},TF_LS_SOLID,FALSE,{TF_CT_COLORREF,{RGB(25,105,190)}},TF_ATTR_INPUT};
 class Attribute final:public ITfDisplayAttributeInfo {
     std::atomic<ULONG> refs{1};
@@ -53,7 +54,7 @@ class Tip final:public ITfTextInputProcessorEx,public ITfKeyEventSink,public ITf
     std::atomic<ULONG> refs{1};ComPtr<ITfThreadMgr> manager;ComPtr<ITfContext> context;ComPtr<ITfComposition> composition;
     DWORD managerCookie=TF_INVALID_COOKIE,focusCookie=TF_INVALID_COOKIE,editCookie=TF_INVALID_COOKIE;
     TfClientId client=TF_CLIENTID_NULL;TfGuidAtom attribute=TF_INVALID_GUIDATOM;
-    Request identity;Response state;bool secure=false,updating=false,shiftOnly=false;
+    Request identity;Response state;bool secure=false,updating=false,shiftOnly=false,activated=false;
     HWND window=nullptr;HFONT font=nullptr;bool moving=false;UINT dpi=96;
     void request(Operation operation,uint32_t key=0){
         if(!context)return;ComPtr<ITfContext> ctx=context;
@@ -266,9 +267,10 @@ public:
         WNDCLASSEXW wc{sizeof(wc)};wc.lpfnWndProc=windowProc;wc.hInstance=module;wc.lpszClassName=L"SailKing.Candidates";wc.hCursor=LoadCursor(nullptr,IDC_ARROW);RegisterClassExW(&wc);
         window=CreateWindowExW(WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE|WS_EX_TOPMOST,wc.lpszClassName,tipDescription,WS_POPUP|WS_BORDER,0,0,420,100,nullptr,nullptr,module,this);
         if(window){dpi=GetDpiForWindow(window);font=CreateFontW(-scaled(14),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY,DEFAULT_PITCH,L"Microsoft YaHei UI");}
-        Request r=identity;exchange(r,state);updateConversion();return S_OK;
+        Request r=identity;exchange(r,state);updateConversion();if(!activated){activated=true;++activatedObjects;}return S_OK;
     }
     HRESULT STDMETHODCALLTYPE Deactivate()override{
+        if(activated){activated=false;--activatedObjects;}
         cancelContext();Request r=identity;r.operation=Operation::close;Response ignored;exchange(r,ignored);
         if(manager){ComPtr<ITfKeystrokeMgr> keys;if(SUCCEEDED(manager.As(&keys)))keys->UnadviseKeyEventSink(client);ComPtr<ITfSource> source;if(SUCCEEDED(manager.As(&source))){if(managerCookie!=TF_INVALID_COOKIE)source->UnadviseSink(managerCookie);if(focusCookie!=TF_INVALID_COOKIE)source->UnadviseSink(focusCookie);}}
         managerCookie=focusCookie=TF_INVALID_COOKIE;manager.Reset();client=TF_CLIENTID_NULL;
@@ -357,3 +359,4 @@ extern "C" BOOL WINAPI SailKingIsActive(){
         result=active.dwProfileType==TF_PROFILETYPE_INPUTPROCESSOR&&active.clsid==tipClsid&&active.guidProfile==profileGuid;
     profiles.Reset();if(SUCCEEDED(initialized))CoUninitialize();return result;
 }
+extern "C" BOOL WINAPI SailKingServiceReady(){return activatedObjects>0;}

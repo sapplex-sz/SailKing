@@ -66,10 +66,17 @@ int wmain(int argc,wchar_t** argv){
     else if(op==L"--self-test"||op==L"--activation-test"){
         ComPtr<ITfTextInputProcessorEx> tip;ComPtr<ITfThreadMgr> manager;TfClientId id=TF_CLIENTID_NULL;
         const char* stage="class";hr=CoCreateInstance(tipClsid,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&tip));
+        ComPtr<ITfInputProcessorProfileMgr> profileManager;TF_INPUTPROCESSORPROFILE previous{};LANGID previousLanguage=0;bool threadActive=false,hadProfile=false,changedLanguage=false;
         if(op==L"--activation-test"){
             if(SUCCEEDED(hr)){stage="manager";hr=CoCreateInstance(CLSID_TF_ThreadMgr,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&manager));}
-            if(SUCCEEDED(hr)){stage="thread";hr=manager->Activate(&id);}
-            if(SUCCEEDED(hr)){stage="service";hr=tip->ActivateEx(manager.Get(),id,0);if(SUCCEEDED(hr))tip->Deactivate();manager->Deactivate();}
+            if(SUCCEEDED(hr)){stage="thread";hr=manager->Activate(&id);threadActive=SUCCEEDED(hr);}
+            if(SUCCEEDED(hr)){stage="profile-manager";hr=CoCreateInstance(CLSID_TF_InputProcessorProfiles,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&profileManager));}
+            if(SUCCEEDED(hr)){
+                hadProfile=profileManager->GetActiveProfile(GUID_TFCAT_TIP_KEYBOARD,&previous)==S_OK;
+                stage="language";hr=profiles->GetCurrentLanguage(&previousLanguage);
+                if(SUCCEEDED(hr)){hr=profiles->ChangeCurrentLanguage(inputLanguage);changedLanguage=SUCCEEDED(hr);}
+            }
+            if(SUCCEEDED(hr)){stage="activate-profile";hr=profileManager->ActivateProfile(TF_PROFILETYPE_INPUTPROCESSOR,inputLanguage,tipClsid,profileGuid,nullptr,TF_IPPMF_FORPROCESS);}
         }
         if(SUCCEEDED(hr)){
             stage="profile-export";
@@ -78,8 +85,20 @@ int wmain(int argc,wchar_t** argv){
             HMODULE library=LoadLibraryExW(dll.c_str(),nullptr,LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR|LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
             using ActiveProfile=BOOL(WINAPI*)();
             auto active=library?reinterpret_cast<ActiveProfile>(GetProcAddress(library,"SailKingIsActive")):nullptr;
-            if(!active)hr=E_FAIL;else (void)active();
+            auto ready=library?reinterpret_cast<ActiveProfile>(GetProcAddress(library,"SailKingServiceReady")):nullptr;
+            if(!active||!ready)hr=E_FAIL;
+            else if(op==L"--activation-test"){
+                stage="service-ready";
+                for(int i=0;i<50&&!ready();++i){MSG message;while(PeekMessageW(&message,nullptr,0,0,PM_REMOVE)){TranslateMessage(&message);DispatchMessageW(&message);}Sleep(20);}
+                if(!active()||!ready())hr=E_FAIL;
+            }else{(void)active();(void)ready();}
             if(library)FreeLibrary(library);
+        }
+        if(op==L"--activation-test"){
+            if(profileManager)profileManager->DeactivateProfile(TF_PROFILETYPE_INPUTPROCESSOR,inputLanguage,tipClsid,profileGuid,nullptr,TF_IPPMF_FORPROCESS);
+            if(changedLanguage)profiles->ChangeCurrentLanguage(previousLanguage);
+            if(profileManager&&hadProfile)profileManager->ActivateProfile(previous.dwProfileType,previous.langid,previous.clsid,previous.guidProfile,previous.hkl,TF_IPPMF_FORPROCESS);
+            if(threadActive)manager->Deactivate();
         }
         std::cout<<"{\""<<(op==L"--activation-test"?"serviceInitialization":"comClass")<<"\":"<<(SUCCEEDED(hr)?"true":"false")<<",\"stage\":\""<<stage<<"\",\"hresult\":"<<static_cast<long>(hr)<<"}\n";
     }else{
