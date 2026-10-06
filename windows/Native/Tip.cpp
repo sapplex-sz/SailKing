@@ -1,6 +1,7 @@
 #include "WindowsSupport.h"
 #include "Guids.h"
 #include <msctf.h>
+#include <initguid.h>
 #include <inputscope.h>
 #include <wrl/client.h>
 #include <atomic>
