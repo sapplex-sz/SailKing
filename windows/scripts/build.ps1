@@ -49,6 +49,12 @@ foreach ($arch in @('x64','Win32')) {
  Copy-Item "$build\Release\SailKingTip.dll","$build\Release\SailKingProbe.exe" $tipStage
  if ($arch -eq 'x64') { Copy-Item "$build\Release\SailKingBroker.exe","$build\Release\SailKingProbe.exe","$build\Release\CHaHaRuntime.dll" $stage }
 }
+$optimized = Join-Path $Output 'avx2'
+Run 'cmake.exe' @('-S',"$root\windows",'-B',$optimized,'-A','x64','-DSAILKING_BROKER=ON','-DSAILKING_AVX2_RUNTIME=ON',"-DSAILKING_RIME_ROOT=$rime/dist","-DSAILKING_LLAMA_ROOT=$llama")
+Run 'cmake.exe' @('--build',$optimized,'--config','Release','--target','CHaHaRuntime','--parallel','4')
+$optimizedStage = Join-Path $stage 'Runtime\avx2'
+New-Item -ItemType Directory -Force $optimizedStage | Out-Null
+Copy-Item "$optimized\Release\CHaHaRuntime.dll" $optimizedStage
 Copy-Item "$rime\dist\lib\rime.dll" $stage
 
 $rimeData = Join-Path $stage 'RimeData'
@@ -75,6 +81,8 @@ foreach ($arch in @('x64','x86')) {
  Copy-Item "$($runtime.FullName)\*.dll" (Join-Path $stage "native\0.4.0-preview.1\$arch")
 }
 Run (Join-Path $stage 'SailKingBroker.exe') @('--smoke')
+Run (Join-Path $stage 'SailKingBroker.exe') @('--runtime-smoke')
+Run (Join-Path $stage 'SailKingBroker.exe') @('--runtime-smoke-baseline')
 Run (Join-Path $stage 'SailKingBroker.exe') @('--prepare-data')
 Run (Join-Path $stage 'SailKingProbe.exe') @('--ipc-smoke')
 # Production installers can be signed by setting a SignTool command externally.

@@ -116,7 +116,11 @@ void haha_cancellation_destroy(haha_cancellation * c) { delete c; }
 void haha_string_free(char * s) { std::free(s); }
 const char * haha_runtime_version(void) {
 #ifdef _WIN32
-    return "llama.cpp 1e411d8f5a1e23525fa3265dfb4bd76265465397; Windows x64 CPU; Hy-MT2 Q4; context 4096";
+#ifdef SAILKING_RUNTIME_AVX2
+    return "llama.cpp 1e411d8f5a1e23525fa3265dfb4bd76265465397; Windows x64 AVX2; Hy-MT2 Q4; context 4096";
+#else
+    return "llama.cpp 1e411d8f5a1e23525fa3265dfb4bd76265465397; Windows x64 baseline; Hy-MT2 Q4; context 4096";
+#endif
 #else
     return "llama.cpp STQ 1e411d8f5a1e23525fa3265dfb4bd76265465397 + legacy stride16 mapping; CPU ARM NEON; context 4096";
 #endif

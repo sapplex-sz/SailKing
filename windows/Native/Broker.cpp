@@ -1,6 +1,7 @@
 #include "WindowsSupport.h"
 #include "Translation.h"
 #include "CHaHaRuntime.h"
+#include "RuntimeDispatch.h"
 #include <rime_api.h>
 #include <bcrypt.h>
 #include <fstream>
@@ -203,6 +204,7 @@ Response process(const Request& r) {
     return out;
 }
 int translationSmoke(){
+    std::cout<<"Runtime: "<<haha_runtime_version()<<"\n";
     auto model=trustedModel();auto local=haha_engine_create();auto cancellation=haha_cancellation_create();
     if(!local||!cancellation)return 30;
     std::string source="您好，您的订单 AB-123 已发货。请留意物流更新。";
@@ -248,6 +250,13 @@ int wmain(int argc,wchar_t** argv){
         }
         if(argc>1&&std::wstring(argv[1])==L"--smoke")return smoke(root);
         if(argc>1&&std::wstring(argv[1])==L"--translation-smoke")return translationSmoke();
+        if(argc>1&&(std::wstring(argv[1])==L"--runtime-smoke"||std::wstring(argv[1])==L"--runtime-smoke-baseline")){
+            if(std::wstring(argv[1])==L"--runtime-smoke-baseline")sailkingRuntimeBaselineForValidation();
+            auto local=haha_engine_create();auto cancellation=haha_cancellation_create();
+            if(!local||!cancellation)return 33;
+            haha_cancellation_request(cancellation);haha_cancellation_destroy(cancellation);haha_engine_unload(local);haha_engine_destroy(local);
+            std::cout<<haha_runtime_version()<<"\n";return 0;
+        }
         if(argc>1&&std::wstring(argv[1])==L"--prepare-data"){initialize(root,root/L"RimeData");api->finalize();return 0;}
         auto name=testing?testingPipe:pipeName();auto mutexName=L"Local\\"+name.substr(9);
         HANDLE singleton=CreateMutexW(nullptr,TRUE,mutexName.c_str());if(!singleton)return 2;if(GetLastError()==ERROR_ALREADY_EXISTS){CloseHandle(singleton);return 0;}
