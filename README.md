@@ -12,14 +12,21 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-111827)
 ![Apple Silicon](https://img.shields.io/badge/Apple_Silicon-arm64-0077B6)
+![Windows preview](https://img.shields.io/badge/Windows-x64_Preview-0078D4)
+[![Windows build](https://github.com/sapplex-sz/SailKing/actions/workflows/windows.yml/badge.svg)](https://github.com/sapplex-sz/SailKing/actions/workflows/windows.yml)
 
 [获取安装包](https://github.com/sapplex-sz/SailKing/releases) · [快速开始](#快速开始) · [功能亮点](#功能亮点) · [使用方法](#使用方法) · [反馈问题](https://github.com/sapplex-sz/SailKing/issues) · [请喝咖啡](#支持开发者)
 
 </div>
 
-出海王是一款原生 **Mac 系统输入法**，也提供独立的翻译工作台。日常输入时使用中文拼音或英文直输；需要跨语言沟通时，在当前输入框完成原文、预览译文，再由你确认上屏。适合客户沟通、商品介绍、跨境业务和多语言社媒交流。
+出海王是一款原生系统输入法，也提供独立的翻译工作台。日常输入时使用中文拼音或英文直输；需要跨语言沟通时，在当前输入框完成原文、预览译文，再由你确认上屏。适合客户沟通、商品介绍、跨境业务和多语言社媒交流。
 
-**当前版本：0.3.6 (9)**，支持 **macOS 26+ / Apple Silicon**。源码已开放，正式 DMG 安装包正在准备 Developer ID 签名与 Apple 公证，尚未公开分发。下载状态以 [Releases](https://github.com/sapplex-sz/SailKing/releases) 为准。
+| 平台 | 版本与范围 | 安装 |
+|---|---|---|
+| **Mac** | 0.3.6 (9) · macOS 26+ · Apple Silicon | [Mac 安装指南](docs/INSTALLATION.md)。正式 DMG 仍在等待 Developer ID 签名与 Apple 公证，尚未公开分发。 |
+| **Windows** | 0.4.0-preview.1 · 目标 Windows 10 2004+ / 11 · x64 | [Windows 安装与验证记录](docs/WINDOWS.md)。预览包未做发布者签名，兼容性以验证记录为准。 |
+
+安装包状态以 [Releases](https://github.com/sapplex-sz/SailKing/releases) 为准。以下详细截图与快捷键以 Mac 版为例，Windows 使用方式见单独指南。
 
 ![出海王翻译工作台：中文物流通知通过 Apple 内置翻译生成英文](docs/images/workspace.png)
 
@@ -29,15 +36,15 @@
 
 | 特色 | 你可以怎样使用 |
 |---|---|
-| **真正的系统输入法** | 添加到 macOS 键盘列表，在支持系统输入法的输入框中使用。中文拼音由 Rime 驱动，支持候选选择与本地词频学习。 |
+| **真正的系统输入法** | Mac 使用 InputMethodKit，Windows 预览版使用 TSF。中文拼音由 Rime 驱动，支持候选选择与本地词频学习；Windows 的实际验收范围见安装指南。 |
 | **中英文合为一个输入源** | 轻按 Shift 在中文拼音和英文直输之间切换，只需添加一个出海王输入源。 |
 | **在输入框内翻译** | 开启翻译输入，完成选词后按 Return 生成译文，核对后再次 Return 上屏；不会代替你发送消息。 |
-| **翻译在本机完成** | Mac 版使用 Apple 设备端翻译或本地 Hy-MT2 模型，无需填写翻译 API Key，原文不发送到翻译 API。 |
+| **翻译在本机完成** | Mac 使用 Apple 设备端翻译或本地 Hy-MT2，Windows 使用本地 Hy-MT2 Q4。无需填写翻译 API Key，原文不发送到翻译 API。 |
 | **紧凑、可拖动的候选窗** | 按候选和译文内容调整空间。拖动标题或原文固定位置，跨应用和重启后保留；也可恢复跟随光标。 |
-| **独立工作台与全局面板** | 长段落在工作台处理；按 Option + Space 打开翻译面板，也能配合你已有的输入法使用。 |
+| **独立翻译工作台** | Mac 和 Windows 都可独立处理段落；Mac 另提供 Option + Space 全局翻译面板。 |
 | **面向跨语言业务的常用表达** | 客户沟通、商品介绍、社媒互动三类短语，一键填入工作台；源语言可自动识别，目标语言与输入法共用。 |
 | **完成前不误用旧译文** | 修改原文或切换语言会清除旧结果。翻译失败保留原文；检测到订单标识、链接或邮箱被改变时提示核对。 |
-| **从安装到试打的新手引导** | 按“安装组件 → 加入键盘 → 试打拼音 → 可选翻译”完成设置。安装在当前用户目录，更新保留旧版本备份、词库和偏好。 |
+| **从安装到试打的新手引导** | 安装组件、启用键盘、试打拼音，再按需下载模型。Mac 在当前用户目录安装；Windows 通过安装器注册组件，卸载保留模型、词库和偏好。 |
 | **源码可读、运行时可重建** | 原创代码采用 MIT 许可，包含原生推理运行时的构建脚本、依赖版本和校验信息。 |
 
 普通拼音和英文输入不需要翻译模型。首次下载模型或 Apple 语言包需要网络，准备完成后可在本机翻译；可用语言组合取决于引擎、模型与已安装语言包。地区选择用于选择目标语言，不保证地区专属措辞。重要内容请核对译文。
@@ -57,7 +64,17 @@
 | <img src="docs/images/settings.png" width="360" alt="系统输入法、Apple 内置翻译、本地模型和语言偏好设置" /> | <img src="docs/images/phrases.png" width="360" alt="客户沟通中的物流、咨询和售后常用表达" /> |
 | 集中管理键盘状态、翻译引擎、模型和目标语言。 | 选择分类，点击短语即可填入工作台继续处理。 |
 
+### Windows 翻译工作台
+
+<img src="docs/images/windows-workspace-preview.png" width="720" alt="Windows 版出海王翻译工作台界面组件预览" />
+
+*由 Windows App 渲染的界面组件预览，文字为布局示例。实机本地翻译结果、耗时及待完成的兼容性验收见 [Windows 指南](docs/WINDOWS.md#验证记录)。*
+
 ## 快速开始
+
+**Windows 用户：**使用 EXE 安装包，在新手设置中启用出海王，按 **Win + Space** 切换输入法，输入 `nihao` 并用空格选词。需要翻译时再下载本地模型；无需安装 Python、Ollama 或 .NET。完整步骤、快捷键、更新和卸载见 [Windows 指南](docs/WINDOWS.md)。
+
+以下为 Mac 版设置步骤。
 
 ### 1. 安装 App 与输入法组件
 
@@ -163,7 +180,7 @@ Mac 版的输入文字通过本机模型或 Apple 设备端翻译处理，不发
 
 **是否支持 Intel Mac、Windows 或手机系统键盘？**
 
-当前发布范围是 macOS 26+ 的 Apple Silicon Mac。仓库中的 iOS 翻译工作台为实验性内容，尚无 iOS 系统键盘扩展，不包含在 Mac 安装包中。其他平台暂未发布。
+Mac 版支持 macOS 26+ 的 Apple Silicon；Windows x64 版提供预览实现与安装流程，实际验证范围见 [Windows 指南](docs/WINDOWS.md)。Intel Mac 与 Windows ARM64 尚不支持。仓库中的 iOS 翻译工作台为实验性内容，尚无 iOS 系统键盘扩展，不包含在桌面安装包中。
 
 **如何更新或卸载？**
 
@@ -205,6 +222,7 @@ bash Tests/InputMethodIPC/run.sh
 | 目录 | 内容 |
 |---|---|
 | `macOS/` | 原生 App、InputMethodKit 输入法与候选窗口 |
+| `windows/` | TSF 输入法、本地输入服务、WPF App、安装器与 Windows 构建检查 |
 | `SharedUI/` | 工作台、设置、常用表达与新手引导 |
 | `SharedRuntime/` | 本地翻译、模型下载与进程通信 |
 | `Sources/HaiwangCore/` | 输入状态、语言配置与结果校验 |
