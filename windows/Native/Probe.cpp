@@ -13,13 +13,14 @@ int wmain(int argc,wchar_t** argv){
     std::wstring op=argc>1?argv[1]:L"--profiles";
     if(op==L"--ipc-smoke"){
         auto exe=sailking::executableDirectory()/L"SailKingBroker.exe";
-        std::wstring command=L"\""+exe.wstring()+L"\" --ipc-test";
+        std::wstring testId=std::to_wstring(GetCurrentProcessId()),testPipe=sailking::pipeName()+L"-test-"+testId;
+        std::wstring command=L"\""+exe.wstring()+L"\" --ipc-test "+testId;
         STARTUPINFOW startup{sizeof(startup)};PROCESS_INFORMATION child{};
         if(!CreateProcessW(exe.c_str(),command.data(),nullptr,nullptr,FALSE,CREATE_NO_WINDOW,nullptr,nullptr,&startup,&child))return 10;
         sailking::Request request;GUID id;CoCreateGuid(&id);memcpy(request.session.data(),&id,16);sailking::Response reply;
-        bool ready=false;for(int i=0;i<100&&!ready;++i){Sleep(100);ready=sailking::exchange(request,reply,500);}
+        bool ready=false;for(int i=0;i<100&&!ready;++i){Sleep(100);ready=sailking::exchangeAt(testPipe,request,reply,500);if(WaitForSingleObject(child.hProcess,0)==WAIT_OBJECT_0)break;}
         int result=ready?0:11;
-        auto call=[&](sailking::Operation operation,uint32_t key=0){request.operation=operation;request.key=key;return sailking::exchange(request,reply,1000);};
+        auto call=[&](sailking::Operation operation,uint32_t key=0){request.operation=operation;request.key=key;return sailking::exchangeAt(testPipe,request,reply,1000);};
         if(!result){
             for(int iteration=0;iteration<20&&!result;++iteration){
                 if(!call(sailking::Operation::reset))result=12;
@@ -39,10 +40,14 @@ int wmain(int argc,wchar_t** argv){
             if(!call(sailking::Operation::key,'A')||reply.handled||reply.commit[0])result=25;
         }
         std::cout<<"IPC checks before shutdown: "<<result<<"\n";
-        bool shutdown=call(sailking::Operation::shutdown);DWORD ended=WaitForSingleObject(child.hProcess,10000);CloseHandle(child.hThread);CloseHandle(child.hProcess);
+        bool shutdown=call(sailking::Operation::shutdown);DWORD ended=WaitForSingleObject(child.hProcess,10000),exitCode=0;GetExitCodeProcess(child.hProcess,&exitCode);
+        // This is the isolated child created above, never the user's input service.
+        if(ended!=WAIT_OBJECT_0){TerminateProcess(child.hProcess,99);WaitForSingleObject(child.hProcess,5000);}
+        CloseHandle(child.hThread);CloseHandle(child.hProcess);
         if(!result&&!shutdown)result=27;
         if(!result&&ended!=WAIT_OBJECT_0)result=26;
-        std::cout<<"{\"ipcSmoke\":"<<(result?"false":"true")<<",\"code\":"<<result<<"}\n";return result;
+        if(!result&&exitCode!=0)result=28;
+        std::cout<<"{\"ipcSmoke\":"<<(result?"false":"true")<<",\"code\":"<<result<<",\"childExit\":"<<exitCode<<"}\n";return result;
     }
     else if(op==L"--stop-broker"){
         HANDLE snapshot=CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);PROCESSENTRY32W entry{};entry.dwSize=sizeof(entry);

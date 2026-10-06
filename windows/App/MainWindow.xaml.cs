@@ -78,7 +78,7 @@ public partial class MainWindow : Window {
     private void AutomaticChanged(object sender,RoutedEventArgs e){if(!initialized)return;Save("AutoTranslate",Automatic.IsChecked==true?1:0);if(Automatic.IsChecked==true&&!composing&&!string.IsNullOrWhiteSpace(SourceText.Text))automatic.Start();else automatic.Stop();}
     private async void SourceChanged(object sender,TextChangedEventArgs e){if(!initialized)return;await InvalidateTranslation();if(Automatic.IsChecked==true&&!composing)automatic.Start();}
     private async Task InvalidateTranslation(){
-        ++generation;translation?.Cancel();OutputText.Clear();CopyButton.IsEnabled=false;
+        ++generation;translation?.Cancel();OutputText.Clear();CopyButton.IsEnabled=false;Status.Text="";
         try{await service.Send(Operation.Cancel);}catch(Exception){/* Preserve source and show a concrete error on the next request. */}
     }
     private async Task Translate(){

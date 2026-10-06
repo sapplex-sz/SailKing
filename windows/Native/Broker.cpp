@@ -20,6 +20,7 @@ std::map<std::array<uint8_t,16>,std::shared_ptr<struct Session>> sessions;
 haha_engine* engine=nullptr;
 bool testing=false;
 std::filesystem::path testingData;
+std::wstring testingPipe;
 std::atomic<bool> stopping{false};
 struct Cancel {
     haha_cancellation* value=haha_cancellation_create();
@@ -240,11 +241,15 @@ int wmain(int argc,wchar_t** argv){
     try{
         SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32|LOAD_LIBRARY_SEARCH_APPLICATION_DIR|LOAD_LIBRARY_SEARCH_USER_DIRS);
         auto root=executableDirectory();
-        if(argc>1&&std::wstring(argv[1])==L"--ipc-test"){testing=true;testingData=std::filesystem::temp_directory_path()/(L"SailKing-IPC-Test-"+std::to_wstring(GetCurrentProcessId()));}
+        if(argc>1&&std::wstring(argv[1])==L"--ipc-test"){
+            if(argc!=3||!argv[2][0]||wcslen(argv[2])>10||std::wstring(argv[2]).find_first_not_of(L"0123456789")!=std::wstring::npos)return 5;
+            testing=true;testingPipe=pipeName()+L"-test-"+argv[2];
+            testingData=std::filesystem::temp_directory_path()/(L"SailKing-IPC-Test-"+std::to_wstring(GetCurrentProcessId()));
+        }
         if(argc>1&&std::wstring(argv[1])==L"--smoke")return smoke(root);
         if(argc>1&&std::wstring(argv[1])==L"--translation-smoke")return translationSmoke();
         if(argc>1&&std::wstring(argv[1])==L"--prepare-data"){initialize(root,root/L"RimeData");api->finalize();return 0;}
-        auto name=pipeName();auto mutexName=L"Local\\"+name.substr(9);
+        auto name=testing?testingPipe:pipeName();auto mutexName=L"Local\\"+name.substr(9);
         HANDLE singleton=CreateMutexW(nullptr,TRUE,mutexName.c_str());if(!singleton)return 2;if(GetLastError()==ERROR_ALREADY_EXISTS){CloseHandle(singleton);return 0;}
         initialize(root,(testing?testingData:userData())/L"Rime");
         // Current user + SYSTEM, local logon session only. No network endpoint and no Everyone ACL.
