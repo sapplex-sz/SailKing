@@ -23,7 +23,7 @@ jobs:
           key: windows-dependencies-rime117-llama1e411-v1
       - name: Build native input method, app and installer
         shell: pwsh
-        run: ./windows/scripts/build.ps1
+        run: ./windows/scripts/build.ps1 -TestComPreflight
       - name: Install and verify both COM registrations
         shell: pwsh
         run: |
@@ -64,5 +64,10 @@ jobs:
         if: failure()
         with:
           name: SailKing-Windows-development-staging
-          path: build/windows/stage
+          path: |
+            build/windows/stage
+            build/windows/x64/Release/SailKingTip.dll
+            build/windows/x64/Release/SailKingProbe.exe
+            build/windows/Win32/Release/SailKingTip.dll
+            build/windows/Win32/Release/SailKingProbe.exe
           if-no-files-found: ignore

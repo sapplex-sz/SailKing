@@ -257,9 +257,11 @@ public:
     HRESULT STDMETHODCALLTYPE ActivateEx(ITfThreadMgr* tm,TfClientId id,DWORD flags)override{
         if(!tm)return E_INVALIDARG;manager=tm;client=id;secure=(flags&TF_TMAE_SECUREMODE)!=0;
         ComPtr<ITfKeystrokeMgr> keys;ComPtr<ITfSource> source;ComPtr<ITfCategoryMgr> categories;
-        if(FAILED(manager.As(&keys))||FAILED(keys->AdviseKeyEventSink(client,this,TRUE))||FAILED(manager.As(&source))){Deactivate();return E_FAIL;}
-        if(FAILED(source->AdviseSink(IID_ITfThreadMgrEventSink,static_cast<ITfThreadMgrEventSink*>(this),&managerCookie))||
-           FAILED(source->AdviseSink(IID_ITfThreadFocusSink,static_cast<ITfThreadFocusSink*>(this),&focusCookie))){Deactivate();return E_FAIL;}
+        HRESULT hr=manager.As(&keys);if(SUCCEEDED(hr))hr=keys->AdviseKeyEventSink(client,this,TRUE);if(SUCCEEDED(hr))hr=manager.As(&source);
+        if(FAILED(hr)){Deactivate();return hr;}
+        hr=source->AdviseSink(IID_ITfThreadMgrEventSink,static_cast<ITfThreadMgrEventSink*>(this),&managerCookie);
+        if(SUCCEEDED(hr))hr=source->AdviseSink(IID_ITfThreadFocusSink,static_cast<ITfThreadFocusSink*>(this),&focusCookie);
+        if(FAILED(hr)){Deactivate();return hr;}
         if(SUCCEEDED(CoCreateInstance(CLSID_TF_CategoryMgr,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&categories))))categories->RegisterGUID(displayGuid,&attribute);
         WNDCLASSEXW wc{sizeof(wc)};wc.lpfnWndProc=windowProc;wc.hInstance=module;wc.lpszClassName=L"SailKing.Candidates";wc.hCursor=LoadCursor(nullptr,IDC_ARROW);RegisterClassExW(&wc);
         window=CreateWindowExW(WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE|WS_EX_TOPMOST,wc.lpszClassName,tipDescription,WS_POPUP|WS_BORDER,0,0,420,100,nullptr,nullptr,module,this);

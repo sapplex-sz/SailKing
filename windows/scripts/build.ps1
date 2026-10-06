@@ -1,4 +1,4 @@
-param([string]$Output = '',[string]$Cache = '',[switch]$SkipInstaller)
+param([string]$Output = '',[string]$Cache = '',[switch]$SkipInstaller,[switch]$TestComPreflight)
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
@@ -35,6 +35,13 @@ foreach ($arch in @('x64','Win32')) {
  $broker = if ($arch -eq 'x64') { 'ON' } else { 'OFF' }
  Run 'cmake.exe' @('-S',"$root\windows",'-B',$build,'-A',$arch,"-DSAILKING_BROKER=$broker","-DSAILKING_RIME_ROOT=$rime/dist","-DSAILKING_LLAMA_ROOT=$llama")
  Run 'cmake.exe' @('--build',$build,'--config','Release','--target','SailKingTip','SailKingProbe','SailKingCoreTests','--parallel','4')
+ if ($TestComPreflight) {
+  $register = if ($arch -eq 'x64') { "$env:SystemRoot\System32\regsvr32.exe" } else { "$env:SystemRoot\SysWOW64\regsvr32.exe" }
+  $dll = "$build\Release\SailKingTip.dll"
+  Run $register @('/s',$dll)
+  try { Run "$build\Release\SailKingProbe.exe" @('--self-test') }
+  finally { Run $register @('/s','/u',$dll) }
+ }
  Run 'cmake.exe' @('--build',$build,'--config','Release','--parallel','4')
  Run 'ctest.exe' @('--test-dir',$build,'-C','Release','--output-on-failure')
  $tipStage = Join-Path $stage ('native\0.4.0-preview.1\'+ $(if ($arch -eq 'x64') { 'x64' } else { 'x86' }))
