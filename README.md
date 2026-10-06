@@ -13,7 +13,7 @@
 ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-111827)
 ![Apple Silicon](https://img.shields.io/badge/Apple_Silicon-arm64-0077B6)
 
-[获取安装包](https://github.com/sapplex-sz/SailKing/releases) · [快速开始](#快速开始) · [功能亮点](#功能亮点) · [使用方法](#使用方法) · [反馈问题](https://github.com/sapplex-sz/SailKing/issues)
+[获取安装包](https://github.com/sapplex-sz/SailKing/releases) · [快速开始](#快速开始) · [功能亮点](#功能亮点) · [使用方法](#使用方法) · [反馈问题](https://github.com/sapplex-sz/SailKing/issues) · [请喝咖啡](#支持开发者)
 
 </div>
 
@@ -218,5 +218,16 @@ bash Tests/InputMethodIPC/run.sh
 本项目原创代码采用 [MIT License](LICENSE)。感谢 Rime、llama.cpp、Hy-MT2 及相关开源词库。第三方引擎、词库、模型与素材分别按其许可使用，见 [第三方说明](THIRD_PARTY_NOTICES.md)。
 
 船长鲸是出海王的项目标识：鲸鱼与对话气泡连接输入与沟通，船长帽和海浪表达“出海”的方向。设计记录见 [品牌说明](Resources/Branding/SailKing-Design.md)。
+
+## 支持开发者
+
+如果出海王帮到了你，欢迎 **请开发者喝杯咖啡 ☕**。感谢每一份支持！也欢迎添加微信，交流使用体验和改进建议。
+
+| 联系开发者 | 请开发者喝杯咖啡 |
+|:---:|:---:|
+| <img src="docs/images/wechat-contact.png" width="240" alt="微信联系二维码：创享机器人，扫码添加开发者微信" /> | <img src="docs/images/wechat-coffee.png" width="240" alt="微信赞赏码：请开发者喝杯咖啡，扫码自愿赞赏" /> |
+| 微信扫码，添加好友交流。 | 微信扫码，自愿赞赏支持。 |
+
+点击二维码图片可查看原图。
 
 技术支持：sapplex@icloud.com · [提交问题](https://github.com/sapplex-sz/SailKing/issues)
