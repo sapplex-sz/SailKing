@@ -35,6 +35,7 @@ foreach ($arch in @('x64','Win32')) {
  $broker = if ($arch -eq 'x64') { 'ON' } else { 'OFF' }
  Run 'cmake.exe' @('-S',"$root\windows",'-B',$build,'-A',$arch,"-DSAILKING_BROKER=$broker","-DSAILKING_RIME_ROOT=$rime/dist","-DSAILKING_LLAMA_ROOT=$llama")
  Run 'cmake.exe' @('--build',$build,'--config','Release','--target','SailKingTip','SailKingProbe','SailKingCoreTests','--parallel','4')
+ if ($arch -eq 'x64') { Run 'cmake.exe' @('--build',$build,'--config','Release','--target','SailKingBroker','--parallel','4') }
  if ($TestComPreflight) {
   $register = if ($arch -eq 'x64') { "$env:SystemRoot\System32\regsvr32.exe" } else { "$env:SystemRoot\SysWOW64\regsvr32.exe" }
   $dll = "$build\Release\SailKingTip.dll"
