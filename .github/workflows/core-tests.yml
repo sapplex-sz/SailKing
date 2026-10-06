@@ -1,0 +1,14 @@
+name: Core tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test input composition, preferences and setup state
+        run: swift test

@@ -1,0 +1,6 @@
+# HaiWang's application-specific defaults. Upstream data remains editable and separate.
+patch:
+  schema_list:
+    - schema: luna_pinyin_simp
+  menu/page_size: 9
+  switcher/hotkeys: []

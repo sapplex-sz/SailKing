@@ -1,0 +1,3 @@
+# Preserve upstream dictionaries, license texts and patch context exactly.
+Vendor/** -whitespace
+Runtime/Patches/** -whitespace

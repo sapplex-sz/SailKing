@@ -1,0 +1,189 @@
+name: Haiwang
+options:
+  bundleIdPrefix: com.haiwang
+  deploymentTarget:
+    macOS: "26.0"
+    iOS: "26.0"
+  createIntermediateGroups: true
+packages:
+  HaiwangCore:
+    path: .
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.3.6"
+    CURRENT_PROJECT_VERSION: "9"
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    ENABLE_APP_SANDBOX: NO
+    COMBINE_HIDPI_IMAGES: YES
+targets:
+  HaiwangMac:
+    type: application
+    platform: macOS
+    sources:
+      - macOS/App
+      - macOS/Resources
+      - SharedUI
+      - SharedRuntime
+      - path: Resources/Licenses
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: HaiwangCore
+      - target: HaiwangInputMethod
+        embed: false
+      - sdk: Translation.framework
+      - framework: Runtime/CHaHaRuntime.xcframework
+        embed: false
+      - sdk: libc++.tbd
+      - sdk: Accelerate.framework
+    postBuildScripts:
+      - name: Embed input method installer
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          TASK_INSTALLER="$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Library/InputMethodInstaller"
+          mkdir -p "$TASK_INSTALLER"
+          /usr/bin/ditto --noextattr --norsrc "$BUILT_PRODUCTS_DIR/出海王输入法键盘.app" "$TASK_INSTALLER/出海王输入法键盘.app"
+          /usr/bin/xcrun swiftc "$SRCROOT/scripts/input-sources.swift" -o "$TASK_INSTALLER/haiwang-input-sources"
+          /bin/cp "$SRCROOT/scripts/install-input-method.sh" "$TASK_INSTALLER/install-input-method.sh"
+          /bin/chmod +x "$TASK_INSTALLER/install-input-method.sh"
+          if [ "$CODE_SIGNING_ALLOWED" != "NO" ]; then
+            /usr/bin/codesign --force --deep --sign "$EXPANDED_CODE_SIGN_IDENTITY" "$TASK_INSTALLER/出海王输入法键盘.app"
+            /usr/bin/codesign --force --sign "$EXPANDED_CODE_SIGN_IDENTITY" "$TASK_INSTALLER/haiwang-input-sources"
+          fi
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.haiwang.app
+        PRODUCT_NAME: 出海王输入法
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
+    info:
+      path: macOS/App/Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDisplayName: 出海王输入法
+        CFBundleIconFile: AppIcon
+        NSHumanReadableCopyright: Copyright © 2026 出海王输入法
+        CFBundleURLTypes:
+          - CFBundleURLName: com.haiwang.workspace
+            CFBundleURLSchemes: [haiwang]
+  HaiwangInputMethod:
+    type: application
+    platform: macOS
+    sources:
+      - macOS/InputMethod
+      - path: Native/RimeBridge
+        excludes: [README.md]
+      - SharedRuntime
+      - path: Vendor/RimeData
+        type: folder
+        buildPhase: resources
+      - path: Vendor/THIRD_PARTY_NOTICES.md
+        buildPhase: resources
+      - path: Resources/Licenses
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: HaiwangCore
+      - sdk: InputMethodKit.framework
+      - sdk: Translation.framework
+      - framework: Runtime/CHaHaRuntime.xcframework
+        embed: false
+      - sdk: libc++.tbd
+      - sdk: Accelerate.framework
+      - framework: Vendor/librime/dist/lib/librime.1.dylib
+        embed: true
+        codeSign: true
+    postBuildScripts:
+      - name: Bundle Rime licenses
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          mkdir -p "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/RimeLicenses"
+          /usr/bin/ditto --noextattr --norsrc "$SRCROOT/Vendor/licenses" "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/RimeLicenses"
+    settings:
+      base:
+        PRODUCT_NAME: 出海王输入法键盘
+        PRODUCT_MODULE_NAME: HaiwangInputMethod
+        PRODUCT_BUNDLE_IDENTIFIER: com.haiwang.inputmethod.Haiwang
+        SWIFT_OBJC_BRIDGING_HEADER: macOS/InputMethod/HaiwangInput-Bridging-Header.h
+        HEADER_SEARCH_PATHS: ["$(SRCROOT)/Native/RimeBridge", "$(SRCROOT)/Vendor/librime/dist/include"]
+        LIBRARY_SEARCH_PATHS: ["$(SRCROOT)/Vendor/librime/dist/lib"]
+        LD_RUNPATH_SEARCH_PATHS: ["$(inherited)", "@executable_path/../Frameworks"]
+        CLANG_ENABLE_OBJC_ARC: YES
+    info:
+      path: macOS/InputMethod/Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDisplayName: 出海王输入法
+        NSPrincipalClass: NSApplication
+        LSBackgroundOnly: true
+        InputMethodConnectionName: HaiwangInputConnection
+        InputMethodServerControllerClass: HaiwangInputController
+        TISInputSourceID: com.haiwang.inputmethod.Haiwang
+        TISIntendedLanguage: zh-Hans
+        TISInputSourceLanguages: [zh-Hans, en]
+        tsInputMethodCharacterRepertoireKey: [Hans, Latn]
+        tsInputMethodIconFileKey: InputMethodIcon.tiff
+        tsInputMethodAlternateIconFileKey: InputMethodIconAlternate.tiff
+        ComponentInputModeDict:
+          tsInputModeListKey:
+            com.haiwang.inputmethod.Haiwang.pinyin:
+              TISInputSourceID: com.haiwang.inputmethod.Haiwang.pinyin
+              TISIntendedLanguage: zh-Hans
+              tsInputModeScriptKey: smSimpChinese
+              tsInputModeDefaultStateKey: true
+              tsInputModeIsVisibleKey: true
+              tsInputModePrimaryInScriptKey: true
+              tsInputModeMenuIconFileKey: InputMethodIcon.tiff
+              tsInputModeAlternateMenuIconFileKey: InputMethodIconAlternate.tiff
+              tsInputModePaletteIconFileKey: InputMethodIcon.tiff
+          tsVisibleInputModeOrderedArrayKey:
+            - com.haiwang.inputmethod.Haiwang.pinyin
+  HaiwangMobile:
+    type: application
+    platform: iOS
+    sources:
+      - iOS/App
+      - SharedUI
+      - SharedRuntime
+      - path: Resources/Licenses
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: HaiwangCore
+      - sdk: Translation.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.haiwang.mobile
+        PRODUCT_NAME: 出海王输入法
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGNING_ALLOWED: NO
+    info:
+      path: iOS/App/Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDisplayName: 出海王输入法
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+schemes:
+  HaiwangMac:
+    build:
+      targets:
+        HaiwangMac: all
+  HaiwangInputMethod:
+    build:
+      targets:
+        HaiwangInputMethod: all
+  HaiwangInputMethodExperimental:
+    build:
+      targets:
+        HaiwangInputMethod: all
+  HaiwangMobile:
+    build:
+      targets:
+        HaiwangMobile: all

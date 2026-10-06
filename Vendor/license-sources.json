@@ -1,0 +1,52 @@
+[
+  {
+    "name": "librime-BSD-3-Clause.txt",
+    "url": "https://raw.githubusercontent.com/rime/librime/1.17.0/LICENSE",
+    "sha256": "f67d27a6d2d586fcfed4b4c886a83747095396a39b6641e18e855086be2ec400"
+  },
+  {
+    "name": "OpenCC-Apache-2.0.txt",
+    "url": "https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.1.9/LICENSE",
+    "sha256": "b534e465949558eec2597b04f5092b5e161236a68dfbfd04d547592ac3964308"
+  },
+  {
+    "name": "Boost-1.0.txt",
+    "url": "https://raw.githubusercontent.com/boostorg/boost/boost-1.84.0/LICENSE_1_0.txt",
+    "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+  },
+  {
+    "name": "glog-BSD-3-Clause.txt",
+    "url": "https://raw.githubusercontent.com/google/glog/v0.7.1/COPYING",
+    "sha256": "136d48dea7a681413691f3db3098f6cf5ffaa3119d96d97bb83b8cff3ce38c4a"
+  },
+  {
+    "name": "leveldb-BSD-3-Clause.txt",
+    "url": "https://raw.githubusercontent.com/google/leveldb/1.23/LICENSE",
+    "sha256": "ccc19f1da0798ed666609b65a5b44dd8b3abe6fc08b9c0592eb76e82e174db19"
+  },
+  {
+    "name": "yaml-cpp-MIT.txt",
+    "url": "https://raw.githubusercontent.com/jbeder/yaml-cpp/0.8.0/LICENSE",
+    "sha256": "aa6fcc27be034e41e21dd832f9175bfe694a48491d9e14ff0fa278e19ad14f1b"
+  },
+  {
+    "name": "marisa-trie-COPYING.txt",
+    "url": "https://raw.githubusercontent.com/s-yata/marisa-trie/v0.2.6/COPYING.md",
+    "sha256": "c0e214362b4dcf118371b02c87321f64a4d8317112d732b6d768167a635f383a"
+  },
+  {
+    "name": "GNU-GPL-3.0.txt",
+    "url": "https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-14.2.0/COPYING3",
+    "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+  },
+  {
+    "name": "utf8cpp-Boost-1.0.txt",
+    "url": "https://raw.githubusercontent.com/nemtrif/utfcpp/v4.0.5/LICENSE",
+    "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+  },
+  {
+    "name": "darts-clone-BSD-2-Clause.txt",
+    "url": "https://raw.githubusercontent.com/s-yata/darts-clone/87b71afd6cf784953e3c08f24c64203397f3b724/COPYING.md",
+    "sha256": "c6ab19db56ed127201dfb05346ea702ab53c4e387f43eafc343a7f4c2f2ae91e"
+  }
+]

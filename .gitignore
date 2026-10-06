@@ -1,0 +1,34 @@
+.DS_Store
+.build/
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+Vendor/librime/
+Vendor/RimeData/build/
+*.log
+
+# Local generated products, download archives and machine-specific reports
+Haiwang.xcodeproj/
+Vendor/downloads/
+Vendor/RimeData/user.yaml
+Vendor/RimeData/*.userdb/
+docs/Validation/
+docs/UI-Audit/
+docs/Release/
+docs/DEPLOYMENT_*.md
+docs/BACKEND_INTEGRATION.md
+docs/VALIDATION.md
+
+# Credentials and signing material must remain outside the source repository
+.asc/
+.env
+.env.*
+*.p8
+*.p12
+*.keychain
+*.keychain-db
+*.mobileprovision
+*.provisionprofile
+*.certSigningRequest
+*.csr

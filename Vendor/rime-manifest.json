@@ -1,0 +1,36 @@
+{
+  "librimeVersion": "1.17.0",
+  "librimeCommit": "33e7814",
+  "assets": [
+    {
+      "name": "rime-33e7814-macOS-universal.tar.bz2",
+      "url": "https://github.com/rime/librime/releases/download/1.17.0/rime-33e7814-macOS-universal.tar.bz2",
+      "sha256": "11d8dc663c6ec06d5ccb6111ba664a9e7b631b703ac6acd07cffbac664021850"
+    },
+    {
+      "name": "rime-deps-33e7814-macOS-universal.tar.bz2",
+      "url": "https://github.com/rime/librime/releases/download/1.17.0/rime-deps-33e7814-macOS-universal.tar.bz2",
+      "sha256": "dfe6047e87be271963d7466bd1a6e3d9e660c30e5e73e4bb94e8782c0a6ac8df"
+    },
+    {
+      "name": "rime-luna-pinyin-56b934b.tar.gz",
+      "url": "https://codeload.github.com/rime/rime-luna-pinyin/tar.gz/56b934b099dfbeab842320f13aa8b461a6ab3e42",
+      "sha256": "876c7ba559794f476abf7195a255aea29000cee281e6f5ec664928dce018bd90"
+    },
+    {
+      "name": "rime-essay-054920d.tar.gz",
+      "url": "https://codeload.github.com/rime/rime-essay/tar.gz/054920de4f54c9e5994276a96a4fc2a35cb51aa3",
+      "sha256": "3339b40aae91b0216d393aeccc6a8f7daad56a1f3a5e1ffcf464c80690d1b6ce"
+    },
+    {
+      "name": "rime-prelude-082425e.tar.gz",
+      "url": "https://codeload.github.com/rime/rime-prelude/tar.gz/082425ea0684bca36474415d4a0e8db9b016487e",
+      "sha256": "66239ba4745d54471e5ce5540b45e86ec663ff5dba004cb23c95531a3bdec00f"
+    },
+    {
+      "name": "rime-stroke-1e8fff9.tar.gz",
+      "url": "https://codeload.github.com/rime/rime-stroke/tar.gz/1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48",
+      "sha256": "1347a57ab4cf269be9b1c49ce50facfe60617207f2780604fe82914070da8a80"
+    }
+  ]
+}

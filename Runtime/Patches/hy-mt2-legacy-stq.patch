@@ -1,0 +1,34 @@
+--- a/ggml/src/gguf.cpp
++++ b/ggml/src/gguf.cpp
+@@ -620,6 +620,21 @@
+         }
+     }
+ 
++    // Tencent's pinned Hy-MT2 stride-16 GGUF predates upstream Q2_0 and
++    // encodes STQ1_0 as 42. Preserve the verified model bytes and remap only
++    // this explicitly identified historical format; modern Q2_0 stays 42.
++    const int haha_arch = gguf_find_key(ctx, "general.architecture");
++    const int haha_name = gguf_find_key(ctx, "general.name");
++    const int haha_ftype = gguf_find_key(ctx, "general.file_type");
++    const bool haha_legacy_stq =
++        haha_arch >= 0 && haha_name >= 0 && haha_ftype >= 0 &&
++        gguf_get_kv_type(ctx, haha_arch) == GGUF_TYPE_STRING &&
++        gguf_get_kv_type(ctx, haha_name) == GGUF_TYPE_STRING &&
++        gguf_get_kv_type(ctx, haha_ftype) == GGUF_TYPE_UINT32 &&
++        strcmp(gguf_get_val_str(ctx, haha_arch), "hunyuan-dense") == 0 &&
++        strcmp(gguf_get_val_str(ctx, haha_name), "HyMT2 1.8B 2bit Stride16") == 0 &&
++        gguf_get_val_u32(ctx, haha_ftype) == 41;
++
+     // read the tensor info
+     for (int64_t i = 0; ok && i < n_tensors; ++i) {
+         struct gguf_tensor_info info;
+@@ -700,6 +715,9 @@
+         // tensor type
+         {
+             ok = ok && gr.read(info.t.type);
++            if (ok && haha_legacy_stq && info.t.type == 42) {
++                info.t.type = GGML_TYPE_STQ1_0;
++            }
+ 
+             // check that tensor type is within defined range
+             if (info.t.type < 0 || info.t.type >= GGML_TYPE_COUNT) {

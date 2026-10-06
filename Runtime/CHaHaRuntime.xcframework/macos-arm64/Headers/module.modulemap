@@ -1,0 +1,4 @@
+module CHaHaRuntime {
+    header "CHaHaRuntime.h"
+    export *
+}
