@@ -1,5 +1,5 @@
 <Window x:Class="SailKing.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="出海王输入法" Width="920" Height="620" MinWidth="820" MinHeight="540" Background="#F8FAFC" Foreground="#202B39" FontFamily="Microsoft YaHei UI" FontSize="13" Loaded="OnLoaded" Closing="OnClosing" PreviewKeyDown="OnKeyDown">
- <Grid>
+ <Grid Background="#F8FAFC">
   <Grid.ColumnDefinitions><ColumnDefinition Width="148"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
   <Border Background="White" BorderBrush="#E3E8EF" BorderThickness="0,0,1,0">
    <DockPanel Margin="14,20,10,14">
