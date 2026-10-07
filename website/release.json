@@ -8,5 +8,14 @@
     "prerelease": true,
     "signed": false
   },
-  "mac": {"version": "0.3.6", "build": 9, "public_download": false}
+  "mac": {
+    "version": "0.3.6",
+    "build": 9,
+    "file": "SailKing-0.3.6-macOS-arm64.dmg",
+    "size": 28276838,
+    "sha256": "7674b1082125a3b974928415cae62e4ca7b0617de1e5043a34282a877a8d7e36",
+    "public_download": true,
+    "signed": true,
+    "notarized": true
+  }
 }

@@ -4,7 +4,7 @@
 
 适用设备：Apple Silicon Mac，macOS 26 或更新系统。
 
-1. 从本项目 GitHub Releases 下载经过 Developer ID 签名和 Apple 公证的安装镜像。
+1. 从 [官网下载页](https://sailking.157-137-190-198.sslip.io/#download) 下载经过 Developer ID 签名和 Apple 公证的安装镜像，也可 [直接下载 Mac 0.3.6](https://sailking.157-137-190-198.sslip.io/downloads/SailKing-0.3.6-macOS-arm64.dmg)。[GitHub Releases](https://github.com/sapplex-sz/SailKing/releases) 提供备用下载与版本记录。
 2. 打开镜像，将“出海王输入法.app”拖到“应用程序”，退出镜像，再从应用程序打开 App。
 3. 在新手设置中点击“安装组件”。安装发生在当前用户目录，无需管理员密码；更新保留旧版本备份、模型、偏好和用户词库。
 4. 打开系统键盘设置，在“文本输入 → 编辑 → ＋ → 简体中文”中添加“出海王输入法”。只需添加一个输入源；英文显示为 SailKing。

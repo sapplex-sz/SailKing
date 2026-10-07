@@ -44,17 +44,24 @@ class References(HTMLParser):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--installer', required=True, type=Path)
+    parser.add_argument('--mac-installer', type=Path)
     parser.add_argument('--output', default=ROOT / 'build/website', type=Path)
     args = parser.parse_args()
     release = json.loads((HERE / 'release.json').read_text())
-    win = release['windows']
-    installer = args.installer.resolve()
-    if installer.name != win['file'] or installer.stat().st_size != win['size']:
-        raise ValueError('Installer name or size does not match release.json')
-    with installer.open('rb') as stream:
-        digest = hashlib.file_digest(stream, 'sha256').hexdigest()
-    if digest != win['sha256']:
-        raise ValueError('Installer SHA-256 does not match release.json')
+    packages = [(release['windows'], args.installer.resolve())]
+    if release['mac']['public_download']:
+        if not args.mac_installer:
+            parser.error('The public Mac release requires --mac-installer')
+        if not (release['mac'].get('signed') and release['mac'].get('notarized')):
+            raise ValueError('The public Mac release must be signed and notarized')
+        packages.append((release['mac'], args.mac_installer.resolve()))
+    for metadata, installer in packages:
+        if installer.name != metadata['file'] or installer.stat().st_size != metadata['size']:
+            raise ValueError('Installer name or size does not match release.json: ' + installer.name)
+        with installer.open('rb') as stream:
+            digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+        if digest != metadata['sha256']:
+            raise ValueError('Installer SHA-256 does not match release.json: ' + installer.name)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     (output / 'assets').mkdir(exist_ok=True)
@@ -63,14 +70,19 @@ def main():
         shutil.copyfile(HERE / name, output / name)
     for name, source in ASSETS.items():
         shutil.copyfile(ROOT / source, output / 'assets' / name)
-    shutil.copyfile(installer, output / 'downloads' / installer.name)
-    (output / 'downloads/SHA256SUMS.txt').write_text(f"{digest}  {win['file']}\n")
+    for metadata, installer in packages:
+        destination = output / 'downloads' / installer.name
+        if installer != destination:
+            shutil.copyfile(installer, destination)
+    (output / 'downloads/SHA256SUMS.txt').write_text(''.join(
+        f"{metadata['sha256']}  {metadata['file']}\n" for metadata, _ in packages))
     url = release['site_url']
     (output / 'robots.txt').write_text(f'User-agent: *\nAllow: /\nSitemap: {url}sitemap.xml\n')
     (output / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n'
         f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>{url}</loc></url></urlset>\n')
     html = (output / 'index.html').read_text()
-    for value in [win['version'], win['sha256'], win['file'], url]:
+    values = [url] + [metadata[field] for metadata, _ in packages for field in ['version', 'sha256', 'file']]
+    for value in values:
         if value not in html:
             raise ValueError('Landing page does not match release.json: ' + value)
     refs = References()
@@ -81,7 +93,9 @@ def main():
             raise ValueError('Missing or unsafe local reference: ' + relative)
     if refs.anchors - refs.ids:
         raise ValueError('Missing anchors: ' + str(refs.anchors - refs.ids))
-    print(f'Built {output}; verified {installer.name}, {win["size"]} bytes, SHA-256 {digest}')
+    print(f'Built {output}')
+    for metadata, _ in packages:
+        print(f'Verified {metadata["file"]}, {metadata["size"]} bytes, SHA-256 {metadata["sha256"]}')
 
 
 if __name__ == '__main__':

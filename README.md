@@ -25,10 +25,10 @@
 
 | 平台 | 版本与范围 | 安装 |
 |---|---|---|
-| **Mac** | 0.3.6 (9) · macOS 26+ · Apple Silicon | [Mac 安装指南](docs/INSTALLATION.md)。正式 DMG 仍在等待 Developer ID 签名与 Apple 公证，尚未公开分发。 |
+| **Mac** | 0.3.6 (9) · macOS 26+ · Apple Silicon | [下载安装包](https://sailking.157-137-190-198.sslip.io/downloads/SailKing-0.3.6-macOS-arm64.dmg) · [SHA-256](https://sailking.157-137-190-198.sslip.io/downloads/SHA256SUMS.txt) · [安装指南](docs/INSTALLATION.md)。正式 DMG 已完成 Developer ID 签名与 Apple 公证。 |
 | **Windows** | 0.4.0-preview.1 · 目标 Windows 10 2004+ / 11 · x64 | [下载安装包](https://sailking.157-137-190-198.sslip.io/downloads/SailKing-0.4.0-preview.1-Windows-x64.exe) · [SHA-256](https://sailking.157-137-190-198.sslip.io/downloads/SHA256SUMS.txt) · [安装与验证记录](docs/WINDOWS.md)。预览包未做发布者签名，兼容性以验证记录为准。 |
 
-在 [官网下载页](https://sailking.157-137-190-198.sslip.io/#download) 查看可用安装包和平台状态；[GitHub Releases](https://github.com/sapplex-sz/SailKing/releases) 保留更新记录和 Windows 备用下载。以下详细截图与快捷键以 Mac 版为例，Windows 使用方式见单独指南。
+在 [官网下载页](https://sailking.157-137-190-198.sslip.io/#download) 查看可用安装包和平台状态；[GitHub Releases](https://github.com/sapplex-sz/SailKing/releases) 保留更新记录和备用下载。以下详细截图与快捷键以 Mac 版为例，Windows 使用方式见单独指南。
 
 ![出海王翻译工作台：中文物流通知通过 Apple 内置翻译生成英文](docs/images/workspace.png)
 
@@ -80,7 +80,7 @@ Windows 用户：从 [官网下载页](https://sailking.157-137-190-198.sslip.io
 
 ### 1. 安装 App 与输入法组件
 
-正式 Mac 安装包完成签名与公证后，将在 [官网下载页](https://sailking.157-137-190-198.sslip.io/#download) 提供。打开 DMG，把 **出海王输入法.app** 拖到“应用程序”，退出镜像后打开 App。
+从 [官网下载页](https://sailking.157-137-190-198.sslip.io/#download) 获取经过 Developer ID 签名与 Apple 公证的 Mac 安装包。打开 DMG，把 **出海王输入法.app** 拖到“应用程序”，退出镜像后打开 App。
 
 首次启动会显示新手设置，点击 **安装输入法组件**。App 已包含组件，无需单独下载安装另一个键盘。已安装的设备会显示“已安装在这台 Mac”，如下图。
 

@@ -45,16 +45,24 @@ def main():
     manifest = json.loads((upload / 'release.json').read_text())
     if manifest['site_url'] != f'https://{DOMAIN}/':
         raise ValueError('Unexpected hostname')
-    win = manifest['windows']
-    if Path(win['file']).name != win['file']:
-        raise ValueError('Invalid installer filename')
-    source = upload / win['file']
-    target = SITE / 'downloads' / win['file']
-    installer = source if source.exists() else target
-    if installer.stat().st_size != win['size'] or digest(installer) != win['sha256']:
-        raise ValueError('Installer verification failed')
-    if target.exists() and digest(target) != win['sha256']:
-        raise ValueError('An immutable installer with different contents already exists')
+    metadata = [manifest['windows']]
+    if manifest['mac']['public_download']:
+        if not (manifest['mac'].get('signed') and manifest['mac'].get('notarized')):
+            raise ValueError('The public Mac release must be signed and notarized')
+        metadata.append(manifest['mac'])
+    packages = []
+    for package in metadata:
+        name = package['file']
+        if Path(name).name != name or Path(name).suffix not in ['.exe', '.dmg']:
+            raise ValueError('Invalid installer filename')
+        source = upload / name
+        target = SITE / 'downloads' / name
+        installer = source if source.exists() else target
+        if installer.stat().st_size != package['size'] or digest(installer) != package['sha256']:
+            raise ValueError('Installer verification failed: ' + name)
+        if target.exists() and digest(target) != package['sha256']:
+            raise ValueError('An immutable installer with different contents already exists: ' + name)
+        packages.append((package, installer, target))
     caddy = Path('/etc/caddy/Caddyfile')
     haproxy = Path('/etc/haproxy/haproxy.cfg')
     caddy_before = caddy.read_bytes()
@@ -106,16 +114,18 @@ def main():
     if not (release / 'index.html').is_file():
         raise ValueError('Static site is missing index.html')
     (SITE / 'downloads').mkdir(exist_ok=True, mode=0o755)
-    if not target.exists():
-        pending_installer = target.with_name('.' + target.name + '.new')
-        shutil.copyfile(installer, pending_installer)
-        if digest(pending_installer) != win['sha256']:
-            raise ValueError('Installer copy verification failed')
-        os.chmod(pending_installer, 0o644)
-        pending_installer.replace(target)
+    for package, installer, target in packages:
+        if not target.exists():
+            pending_installer = target.with_name('.' + target.name + '.new')
+            shutil.copyfile(installer, pending_installer)
+            if digest(pending_installer) != package['sha256']:
+                raise ValueError('Installer copy verification failed: ' + package['file'])
+            os.chmod(pending_installer, 0o644)
+            pending_installer.replace(target)
     checksums = SITE / 'downloads/SHA256SUMS.txt'
     # Include retained versioned installers so older links remain valid.
-    values = [f'{digest(file)}  {file.name}\n' for file in sorted(checksums.parent.glob('*.exe'))]
+    retained = sorted(file for file in checksums.parent.iterdir() if file.is_file() and file.suffix in ['.exe', '.dmg'])
+    values = [f'{digest(file)}  {file.name}\n' for file in retained]
     (checksums.parent / '.SHA256SUMS.new').write_text(''.join(values))
     (checksums.parent / '.SHA256SUMS.new').replace(checksums)
     pending = SITE / '.current-new'
@@ -142,7 +152,7 @@ def main():
         run('systemctl', 'reload', 'haproxy')
         run('systemctl', 'reload', 'caddy')
         raise
-    print(json.dumps({'site': manifest['site_url'], 'release': str(release), 'backup': str(backup), 'installer_sha256': win['sha256']}))
+    print(json.dumps({'site': manifest['site_url'], 'release': str(release), 'backup': str(backup), 'installer_sha256': {package['file']: package['sha256'] for package in metadata}}))
 
 
 if __name__ == '__main__':

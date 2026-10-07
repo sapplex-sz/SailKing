@@ -37,12 +37,15 @@ document.querySelectorAll('dialog').forEach(dialog => {
     if (event.target === dialog && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) dialog.close();
   });
 });
-document.querySelector('.copy-hash').addEventListener('click', async () => {
-  const status = document.querySelector('#copy-status');
-  try {
-    await navigator.clipboard.writeText(document.querySelector('#installer-hash').textContent);
-    status.textContent = '已复制';
-  } catch {
-    status.textContent = '请选中上方校验值复制';
-  }
+document.querySelectorAll('.copy-hash').forEach(button => {
+  button.addEventListener('click', async () => {
+    const checksum = button.closest('.checksum');
+    const status = checksum.querySelector('[role="status"]');
+    try {
+      await navigator.clipboard.writeText(checksum.querySelector('code').textContent);
+      status.textContent = '已复制';
+    } catch {
+      status.textContent = '请选中上方校验值复制';
+    }
+  });
 });

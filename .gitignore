@@ -39,3 +39,7 @@ windows/**/obj/
 windows/.vs/
 windows/_deps/
 *.pdb
+
+# Release installers are distributed through the download server and Releases.
+/*.dmg
+/*.dmg.sha256

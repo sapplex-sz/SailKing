@@ -7,11 +7,11 @@
 ## 本地构建与预览
 
 ```sh
-python3 website/build.py --installer /absolute/path/SailKing-0.4.0-preview.1-Windows-x64.exe
+python3 website/build.py --installer /absolute/path/SailKing-0.4.0-preview.1-Windows-x64.exe --mac-installer /absolute/path/SailKing-0.3.6-macOS-arm64.dmg
 python3 -m http.server 8766 --bind 127.0.0.1 --directory build/website
 ```
 
-构建检查安装包文件名、大小、SHA-256、页面版本、站内链接与素材引用。安装包和生成目录不提交 Git。更新时先修改 `release.json` 与页面中的下载信息，再使用经过发布验证的安装包构建。
+构建检查两种平台安装包的文件名、大小、SHA-256、页面版本、站内链接与素材引用。Mac 正式包公开前必须另行检查 Developer ID 签名、公证附票与 Gatekeeper，`release.json` 记录验证后的状态。安装包和生成目录不提交 Git。更新时先修改 `release.json` 与页面中的下载信息，再使用经过发布验证的安装包构建。
 
 ## 服务器部署
 
@@ -21,7 +21,7 @@ python3 -m http.server 8766 --bind 127.0.0.1 --directory build/website
 - `downloads/`：版本化安装包与校验清单，旧版本下载文件保留。
 - `/root/sailking-site-backups/`：仅管理员可读取的部署前配置备份和上一版指向。
 
-`deploy/Caddyfile.site` 只定义本网站。部署时将已构建页面（排除 `downloads/`）打包为 `site.tar.gz`，连同 `release.json`、此 Caddy 片段、`deploy/activate.py` 和安装包上传到服务器的临时目录，再运行：
+`deploy/Caddyfile.site` 只定义本网站。部署时将已构建页面（排除 `downloads/`）打包为 `site.tar.gz`，连同 `release.json`、此 Caddy 片段、`deploy/activate.py` 和新安装包上传到服务器的临时目录；已有版本可复用服务器中的文件，但仍会重新校验。再运行：
 
 ```sh
 sudo python3 /path/to/upload/activate.py --upload /path/to/upload
